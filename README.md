@@ -1,6 +1,6 @@
 # PAI-OpenCode
 
-[![Status](https://img.shields.io/badge/status-v0.1%20Foundation-blue)](https://github.com/Steffen025/pai-opencode)
+[![Status](https://img.shields.io/badge/status-v0.4%20Agent%20Delegation-blue)](https://github.com/Steffen025/pai-opencode)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![PAI Version](https://img.shields.io/badge/PAI-2.0-green)](https://github.com/danielmiessler/PAI)
 
@@ -59,16 +59,16 @@ PAI transforms AI coding assistants from reactive chat interfaces into proactive
 
 ## Project Status
 
-**Current Version:** v0.1 - Foundation ✅ COMPLETE
+**Current Version:** v0.4 - Agent Delegation 🧪 TESTING
 
 **Progress to v1.0 Public Release:**
 
 | Milestone | Description | Status |
 |-----------|-------------|--------|
 | v0.1 | Foundation (Workspace + Git + Research) | ✅ DONE |
-| v0.2 | Vanilla Install (PAI 2.0 packs) | NOT STARTED |
-| v0.3 | Skills Translation (OpenCode lazy loading) | NOT STARTED |
-| v0.4 | Agent Delegation (Hybrid Task API) | NOT STARTED |
+| v0.2 | Vanilla Install (PAI 2.0 packs) | ✅ DONE |
+| v0.3 | Skills Translation (OpenCode lazy loading) | ✅ DONE |
+| v0.4 | Agent Delegation (Hybrid Task API) | 🧪 TESTING |
 | v0.5 | History System (OpenCode sessions) | NOT STARTED |
 | v0.6 | Converter Tool (PAI → OpenCode translator) | NOT STARTED |
 | v0.7 | Plugin Adaptation (Hooks → Plugins) | NOT STARTED |
@@ -76,7 +76,12 @@ PAI transforms AI coding assistants from reactive chat interfaces into proactive
 | v0.9 | Documentation (Public release prep) | NOT STARTED |
 | v1.0 | **PUBLIC RELEASE** | NOT STARTED |
 
-**This is work-in-progress.** We're in early development (Foundation complete). Installation instructions, usage guides, and full functionality are coming in future milestones.
+**Recent Achievements:**
+- **v0.2:** PAI 2.0 vanilla install with kai-core-install pack, submodule integration
+- **v0.3:** Skills translation with 94.96% token reduction, CORE and CreateSkill migrated
+- **v0.4:** 7 core agents migrated, Task wrapper with 19 passing unit tests, <10ms overhead
+
+**This is work-in-progress.** We're actively testing v0.4 Agent Delegation. Installation instructions and full functionality are progressing rapidly.
 
 **Full Roadmap:** See [ROADMAP.md](ROADMAP.md) for detailed milestone specifications.
 
@@ -250,18 +255,19 @@ This project is open source and free to use, modify, and distribute. See [LICENS
 
 ## What's Next?
 
-**Immediate Next Steps (v0.2):**
-1. Install vanilla PAI 2.0 packs
-2. Verify basic structure
-3. Run architecture checks
-4. Document installation process
+**Current Focus (v0.4 Testing):**
+1. Live testing of agent delegation in OpenCode environment
+2. Verify `@agent-name` invocation pattern works
+3. Test parallel agent execution
+4. Validate Task wrapper integration
 
-**Path to v1.0 Public Release:**
-- Skills translation with OpenCode lazy loading
-- Agent delegation via hybrid Task API
-- Hook → Plugin adaptation
-- End-to-end testing and validation
-- Complete documentation for community
+**Upcoming Milestones:**
+- **v0.5** - History System (OpenCode-native session storage)
+- **v0.6** - Converter Tool (PAI → OpenCode translator for updates)
+- **v0.7** - Plugin Adaptation (Hooks → OpenCode plugins)
+- **v0.8** - Integration Testing (End-to-end validation)
+- **v0.9** - Documentation (Public release prep)
+- **v1.0** - PUBLIC RELEASE
 
 **Follow our progress:** Watch this repository or check [ROADMAP.md](ROADMAP.md) for milestone updates.
 
