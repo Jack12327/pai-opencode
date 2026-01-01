@@ -1,7 +1,7 @@
 # PAI-OpenCode
 
 [![Status](https://img.shields.io/badge/status-v0.1%20Foundation-blue)](https://github.com/Steffen025/pai-opencode)
-[![License](https://img.shields.io/badge/license-TBD-lightgrey)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![PAI Version](https://img.shields.io/badge/PAI-2.0-green)](https://github.com/danielmiessler/PAI)
 
 > A community-driven port of Daniel Miessler's PAI 2.0 from Claude Code to OpenCode
@@ -229,12 +229,12 @@ This port is based on comprehensive research (48-page synthesis) of PAI 2.0's ar
 
 ## License
 
-**TBD** - License will match or be compatible with the [original PAI repository](https://github.com/danielmiessler/PAI) license. We'll update this section once we verify Daniel's licensing terms.
+**MIT License** - Same as the [original PAI repository](https://github.com/danielmiessler/PAI).
 
-**Principles:**
-- Respect Daniel's original work and licensing
-- Enable community use and contribution
-- Maintain compatibility with upstream PAI
+This project is open source and free to use, modify, and distribute. See [LICENSE](LICENSE) for details.
+
+**In Daniel's words:**
+> "Do whatever you want with this. Build on it, sell it, modify it. Just don't blame us if something breaks. Attribution appreciated but not required."
 
 ---
 

@@ -1,0 +1,527 @@
+# PAI 2.0 → OpenCode Migration Roadmap
+
+**Version:** 3.0.0
+**Based on:** Constitution v3.2.0, SYNTHESIS.md
+**Created:** 2025-12-31
+**Last Updated:** 2026-01-01
+**Author:** Steffen (with PAI assistance)
+
+---
+
+## Project Scope
+
+**This is a PUBLIC community contribution.**
+
+| Aspect | Definition |
+|--------|------------|
+| **Goal** | Port Daniel Miessler's PAI 2.0 from Claude Code to OpenCode |
+| **Output** | Working PAI 2.0 installation on OpenCode platform |
+| **Visibility** | PUBLIC - Shareable with the community |
+| **Identity** | NONE - Pure vanilla PAI 2.0, no personal customizations |
+
+**What This Is NOT:**
+- ❌ NOT Jeremy 2.0 (that's a separate private project)
+- ❌ NOT identity-specific (no TELOS, no Ideology)
+- ❌ NOT personal customizations
+
+**Why This Matters:**
+- Contributes to the PAI community
+- Documents the migration process for others
+- Creates a reusable foundation for personal extensions
+- Validates PAI 2.0 portability claims
+
+---
+
+## Project Structure
+
+```
+PUBLIC PROJECT: PAI-OpenCode
+├── Repository: github.com/Steffen025/pai-opencode (PUBLIC)
+├── Goal: PAI 2.0 working on OpenCode
+├── Version: v0.1 → v1.0
+└── Output: Documented, shareable migration
+
+PRIVATE PROJECT: Jeremy 2.0 (SEPARATE)
+├── Repository: github.com/Steffen025/jeremy-2.0 (PRIVATE)
+├── Goal: Jeremy identity on PAI-OpenCode
+├── Dependency: Requires PAI-OpenCode v1.0
+└── Scope: TELOS, Ideology, personal customizations
+```
+
+---
+
+## Version Definition
+
+**v1.0 = Functional PAI 2.0 on OpenCode**
+
+A complete, working port where:
+- Skills load and activate correctly
+- Agent delegation works
+- History system captures sessions
+- Hooks function as plugins
+- PAI architecture check passes
+- No regressions from Claude Code version
+
+---
+
+## Milestone Overview
+
+| Version | Milestone | Scope | Status |
+|---------|-----------|-------|--------|
+| **v0.1** | Foundation | Workspace + Git | ✅ DONE |
+| **v0.2** | Vanilla Install | PAI 2.0 packs installed | NOT STARTED |
+| **v0.3** | Skills Translation | LazyLoad for OpenCode | NOT STARTED |
+| **v0.4** | Agent Delegation | Hybrid Task API | NOT STARTED |
+| **v0.5** | History System | OpenCode-native sessions | NOT STARTED |
+| **v0.6** | Converter Tool | PAI → OpenCode translator | NOT STARTED |
+| **v0.7** | Plugin Adaptation | Hooks → OpenCode plugins | NOT STARTED |
+| **v0.8** | Integration | End-to-end validation | NOT STARTED |
+| **v0.9** | Documentation | Public release prep | NOT STARTED |
+| **v1.0** | **PUBLIC RELEASE** | PAI 2.0 on OpenCode | NOT STARTED |
+
+---
+
+## v0.1: Foundation ✅ DONE
+
+**Completed:** 2026-01-01
+
+**Deliverables:**
+- [x] OpenCode workspace created
+- [x] Git architecture configured (origin, upstream, fork)
+- [x] Basic directory structure established
+- [x] Research phase complete (SYNTHESIS.md)
+- [x] Constitution v3.2.0 ratified
+- [x] 6 Technical Decisions documented
+
+**Current State:**
+```
+~/Workspace/GitHub/Steffen025/Jeremy2.0/
+├── .opencode/              ← Empty, ready for PAI 2.0
+├── .git/                   ← Configured with 3 remotes
+└── [research artifacts]
+```
+
+---
+
+## v0.2: Vanilla Install
+
+**Goal:** Install Daniel Miessler's PAI 2.0 packs without modification
+
+**Technical Decision:** Clean Break (Constitution §IX.1)
+
+**Actions:**
+1. Clone PAI 2.0 repository structure
+2. Install kai-core-install pack
+3. Install kai-history-system pack (without hooks)
+4. Verify basic structure created
+5. Run architecture check
+
+**Deliverables:**
+- [ ] PAI 2.0 directory structure in `.opencode/`
+- [ ] Core packs installed (skills, agents, commands)
+- [ ] No hooks activated yet (deferred to v0.7)
+- [ ] `bun Tools/PaiArchitecture.ts check` passes
+
+**Acceptance Criteria:**
+- PAI 2.0 file structure present
+- No errors during installation
+- Architecture validation passes
+
+---
+
+## v0.3: Skills Translation
+
+**Goal:** Translate PAI skills to use OpenCode's native lazy loading
+
+**Technical Decision:** LazyLoad Translation (Constitution §IX.3)
+
+**Why This Matters:**
+- Claude Code doesn't support lazy loading natively
+- Daniel built a workaround for Claude Code
+- OpenCode DOES support lazy loading
+- We use the superior native mechanism
+
+**Actions:**
+1. Analyze PAI skill structure (SKILL.md, workflows/, etc.)
+2. Map to OpenCode skill format
+3. Implement 3-tier progressive disclosure:
+   - Tier 1: Description in frontmatter (always loaded)
+   - Tier 2: SKILL.md body (loaded on activation)
+   - Tier 3: Reference files (loaded just-in-time)
+4. Translate CORE skill as proof of concept
+5. Create skill translation script
+
+**Deliverables:**
+- [ ] Skill format mapping documented
+- [ ] CORE skill translated and loading
+- [ ] Progressive disclosure working (92.5% token reduction)
+- [ ] Skill translation script created
+
+**Acceptance Criteria:**
+- Skills load on-demand, not all at startup
+- Token usage dramatically reduced
+- USE WHEN triggers work correctly
+
+---
+
+## v0.4: Agent Delegation
+
+**Goal:** Implement hybrid agent delegation (Task API + OpenCode subagents)
+
+**Technical Decision:** Hybrid Approach (Constitution §IX.2)
+
+**Architecture:**
+```
+Complex Tasks → Task Tool API (PAI-style)
+Simple Tasks  → OpenCode native subagents
+Pack Install  → Task Tool (maintains compatibility)
+```
+
+**Actions:**
+1. Analyze PAI agent definitions (intern, engineer, architect, etc.)
+2. Map Task tool API to OpenCode equivalent
+3. Implement Task tool wrapper for complex delegation
+4. Enable OpenCode subagent fallback for simple tasks
+5. Test agent routing with sample tasks
+
+**Deliverables:**
+- [ ] Agent definitions translated
+- [ ] Task tool wrapper functional
+- [ ] Complex delegation working
+- [ ] Simple task routing to OpenCode subagents
+
+**Acceptance Criteria:**
+- `Task({ subagent_type: "intern", ... })` works
+- Parallel agent execution supported
+- PAI packs can be installed (they use Task tool)
+
+---
+
+## v0.5: History System
+
+**Goal:** Implement OpenCode-native session storage
+
+**Technical Decision:** Dual Layer - OpenCode sessions only for v1.0 (Constitution §IX.5)
+
+**Note:** The "PAI knowledge management" layer (Learnings/, Research/, Decisions/) is for Jeremy 2.0, not the public port. v1.0 uses only OpenCode-native sessions.
+
+**Actions:**
+1. Research OpenCode session storage location
+2. Verify session transcripts captured
+3. Test session search/retrieval
+4. Document session data format
+
+**Deliverables:**
+- [ ] Session storage location documented
+- [ ] Transcripts captured correctly
+- [ ] Session retrieval working
+- [ ] No data loss during sessions
+
+**Acceptance Criteria:**
+- Sessions persist across restarts
+- Session content retrievable
+- No regression from Claude Code behavior
+
+---
+
+## v0.6: Converter Tool
+
+**Goal:** Create PAI 2.0 → OpenCode translation tool
+
+**Technical Decision:** Clean Break + Converter (Constitution §IX.1)
+
+**Purpose:**
+- Import upstream PAI 2.0 updates
+- Translate settings, skills, agents
+- Enable ongoing sync with Daniel's changes
+
+**Actions:**
+1. Create `tools/pai-to-opencode-converter.ts`
+2. Implement settings translation (`.claude/settings.json` → `opencode.json`)
+3. Implement skill format translation
+4. Implement agent definition translation
+5. Test with sample PAI 2.0 updates
+
+**Deliverables:**
+- [ ] Converter script created
+- [ ] Settings translation working
+- [ ] Skill translation working
+- [ ] Agent translation working
+- [ ] Documentation for usage
+
+**Acceptance Criteria:**
+- Can import new PAI 2.0 releases
+- Translations are accurate
+- No manual intervention needed for standard cases
+
+---
+
+## v0.7: Plugin Adaptation
+
+**Goal:** Adapt Claude Code hooks as OpenCode plugins
+
+**Technical Decision:** DEFERRED pending research (Constitution §IX.4)
+
+**Critical Research Questions:**
+1. Can plugins replicate all 8 hook events?
+2. How to block tool execution (exit code 2 equivalent)?
+3. Plugin access to tool inputs/outputs?
+4. Context injection at session start?
+
+**Hook → Plugin Mapping (Research Required):**
+
+| Claude Code Hook | OpenCode Plugin Event | Status |
+|------------------|----------------------|--------|
+| PreToolUse | `tool.execute.before` | RESEARCH |
+| PostToolUse | `tool.execute.after` | RESEARCH |
+| Stop | `session.idle` | RESEARCH |
+| SubagentStop | TBD | RESEARCH |
+| SessionStart | `session.created` | RESEARCH |
+| SessionEnd | `session.end` | RESEARCH |
+| UserPromptSubmit | TBD | RESEARCH |
+| PreCompact | TBD | RESEARCH |
+
+**Actions:**
+1. Complete plugin capability research
+2. Document event mapping
+3. Adapt each hook as plugin
+4. Test blocking behavior
+5. Validate all 8 events covered
+
+**Deliverables:**
+- [ ] Plugin research complete (`research/opencode-plugin-research.md`)
+- [ ] Event mapping documented
+- [ ] All hooks adapted as plugins
+- [ ] Blocking behavior working
+- [ ] No regression in functionality
+
+**Acceptance Criteria:**
+- All hook functionality preserved
+- Plugins load without errors
+- Security validation intact
+- Context loading correct
+
+---
+
+## v0.8: Integration Testing
+
+**Goal:** Validate complete PAI 2.0 functionality on OpenCode
+
+**Actions:**
+1. End-to-end workflow testing
+2. Skill activation testing
+3. Agent delegation testing
+4. History capture testing
+5. Plugin behavior testing
+6. Architecture check validation
+7. Performance comparison (token usage, latency)
+
+**Test Matrix:**
+
+| Component | Test | Pass/Fail |
+|-----------|------|-----------|
+| Skills | CORE loads on session start | |
+| Skills | USE WHEN triggers activate skill | |
+| Skills | Progressive disclosure reduces tokens | |
+| Agents | Task tool delegates correctly | |
+| Agents | Parallel agents execute | |
+| Agents | Agent responses captured | |
+| History | Sessions persist | |
+| History | Transcripts retrievable | |
+| Plugins | SessionStart equivalent works | |
+| Plugins | PreToolUse blocking works | |
+| Plugins | PostToolUse capture works | |
+| Architecture | `PaiArchitecture.ts check` passes | |
+
+**Deliverables:**
+- [ ] All tests passing
+- [ ] No regressions identified
+- [ ] Performance acceptable
+- [ ] Edge cases documented
+
+**Acceptance Criteria:**
+- 100% of core functionality working
+- No blocking issues
+- Ready for documentation
+
+---
+
+## v0.9: Documentation
+
+**Goal:** Prepare public release documentation
+
+**Deliverables:**
+
+### README.md
+- Project overview
+- Installation instructions
+- Quick start guide
+- Architecture overview
+- Contributing guidelines
+
+### MIGRATION-GUIDE.md
+- Step-by-step migration process
+- Common issues and solutions
+- Platform differences explained
+- Troubleshooting guide
+
+### ARCHITECTURE.md
+- Technical decisions and rationale
+- Component mapping (Claude Code → OpenCode)
+- Directory structure
+- Configuration format
+
+### CHANGELOG.md
+- Version history
+- Breaking changes
+- Migration notes
+
+**Actions:**
+1. Write README.md
+2. Write MIGRATION-GUIDE.md
+3. Write ARCHITECTURE.md
+4. Create CHANGELOG.md
+5. Review for sensitive content (ensure no personal data)
+6. Peer review documentation
+
+**Acceptance Criteria:**
+- Documentation complete and accurate
+- No personal/private content
+- Clear enough for community use
+- All code examples tested
+
+---
+
+## v1.0: PUBLIC RELEASE
+
+**Goal:** Release PAI 2.0 on OpenCode to the community
+
+**Prerequisites:**
+- [ ] All v0.x milestones complete
+- [ ] Integration tests passing
+- [ ] Documentation reviewed
+- [ ] No sensitive content
+- [ ] License appropriate (check PAI license)
+
+**Release Checklist:**
+- [ ] Final architecture check passes
+- [ ] All documentation complete
+- [ ] Repository cleaned (no personal artifacts)
+- [ ] README prominent and clear
+- [ ] Installation tested on fresh system
+- [ ] Announce to PAI community
+
+**Deliverables:**
+- Public GitHub repository: `pai-opencode`
+- Complete documentation
+- Working PAI 2.0 on OpenCode
+- Migration guide for others
+
+**Success Criteria:**
+- Others can follow the guide and migrate
+- No personal/private data exposed
+- Contributes value to PAI community
+- Foundation ready for Jeremy 2.0
+
+---
+
+## Post-v1.0: Jeremy 2.0 (PRIVATE)
+
+**SEPARATE PROJECT - NOT PART OF THIS ROADMAP**
+
+After v1.0 is released publicly, Jeremy 2.0 development begins:
+
+| Milestone | Scope |
+|-----------|-------|
+| Jeremy 0.1 | TELOS pack integration |
+| Jeremy 0.2 | Ideology pack integration |
+| Jeremy 0.3 | German Business Context |
+| Jeremy 0.4 | SpecFirst workflow |
+| Jeremy 0.5 | Voice system |
+| Jeremy 1.0 | Complete Jeremy identity on PAI-OpenCode |
+
+**Repository:** `github.com/Steffen025/jeremy-2.0` (PRIVATE)
+**Dependency:** PAI-OpenCode v1.0
+
+---
+
+## Technical Decisions Reference
+
+All decisions documented in Constitution v3.2.0 Section IX:
+
+| # | Decision | Choice | Milestone |
+|---|----------|--------|-----------|
+| 1 | Configuration | Clean Break + Converter | v0.6 |
+| 2 | Agent Delegation | Hybrid (Task API + subagents) | v0.4 |
+| 3 | Skills Loading | LazyLoad Translation | v0.3 |
+| 4 | Hook System | DEFERRED (needs research) | v0.7 |
+| 5 | History System | OpenCode-native for v1.0 | v0.5 |
+| 6 | Directory Structure | Clean Break to `.opencode/` | v0.1 ✅ |
+
+**Guiding Principle:** Import capability, not backwards compatibility.
+
+---
+
+## Risk Assessment
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| Plugin system can't replicate hooks | Medium | High | Research in v0.7, fallback options |
+| OpenCode API changes | Low | Medium | Pin to stable version |
+| PAI 2.0 upstream changes | Medium | Low | Converter tool handles translation |
+| Documentation incomplete | Low | Medium | Review before release |
+| Personal data leak | Low | Critical | Thorough review before public |
+
+---
+
+## Progress Tracking
+
+### Current Status
+
+| Milestone | Status | Blocker |
+|-----------|--------|---------|
+| v0.1 Foundation | ✅ DONE | - |
+| v0.2 Vanilla Install | NOT STARTED | - |
+| v0.3 Skills Translation | NOT STARTED | v0.2 |
+| v0.4 Agent Delegation | NOT STARTED | v0.3 |
+| v0.5 History System | NOT STARTED | v0.2 |
+| v0.6 Converter Tool | NOT STARTED | v0.3, v0.4 |
+| v0.7 Plugin Adaptation | NOT STARTED | Research needed |
+| v0.8 Integration | NOT STARTED | v0.2-v0.7 |
+| v0.9 Documentation | NOT STARTED | v0.8 |
+| v1.0 Release | NOT STARTED | v0.9 |
+
+### Dependency Graph
+
+```
+v0.1 ────┬──→ v0.2 ──┬──→ v0.3 ──→ v0.4 ──┐
+         │           │                     │
+         │           └──→ v0.5             │
+         │                                 │
+         │           ┌─────────────────────┘
+         │           │
+         │           v
+         └──→ v0.6 (needs v0.3, v0.4)
+                     │
+                     v
+              v0.7 (plugin research independent)
+                     │
+                     v
+                   v0.8 ──→ v0.9 ──→ v1.0
+```
+
+---
+
+## Version History
+
+| Version | Date | Change |
+|---------|------|--------|
+| 1.0.0 | 2025-12-31 | Initial roadmap |
+| 2.0.0 | 2025-12-31 | Aligned with Constitution v3.0.0 |
+| 2.1.0 | 2026-01-01 | Hook/Plugin incompatibility discovery |
+| 2.2.0 | 2026-01-01 | Research complete, estimates added |
+| **3.0.0** | 2026-01-01 | **COMPLETE REWRITE** - Public/Private split. v1.0 = Pure PAI 2.0 → OpenCode port (PUBLIC). Jeremy identity moved to separate private project. New versioning: v0.1-v0.9 milestones to v1.0 release. |
+
+---
+
+**ROADMAP v3.0.0 - END OF DOCUMENT**
