@@ -512,6 +512,42 @@ v0.1 ────┬──→ v0.2 ──┬──→ v0.3 ──→ v0.4 ──
 
 ---
 
+## Community Updates
+
+**Discussion Thread:** [PAI-OpenCode on danielmiessler/PAI](https://github.com/danielmiessler/Personal_AI_Infrastructure/discussions/286)
+
+We committed to posting updates at each milestone. Track progress here:
+
+| Milestone | Update Required | Status | Posted |
+|-----------|-----------------|--------|--------|
+| v0.1 | Foundation complete, project announced | ✅ DONE | 2026-01-01 |
+| v0.2 | Vanilla PAI 2.0 packs installed | ⏳ Pending | - |
+| v0.3 | Skills translation working | ⏳ Pending | - |
+| v0.4 | Agent delegation functional | ⏳ Pending | - |
+| v0.5 | History system operational | ⏳ Pending | - |
+| v0.6 | Converter tool available | ⏳ Pending | - |
+| v0.7 | Plugin adaptation complete | ⏳ Pending | - |
+| v0.8 | Integration tests passing | ⏳ Pending | - |
+| v0.9 | Documentation ready | ⏳ Pending | - |
+| v1.0 | **PUBLIC RELEASE** 🎉 | ⏳ Pending | - |
+
+**Update Template:**
+```markdown
+## 🚀 Milestone Update: v0.X - [Milestone Name]
+
+**Status:** Complete ✅
+
+**What's New:**
+- [Key achievement 1]
+- [Key achievement 2]
+
+**Next Up:** v0.Y - [Next Milestone]
+
+**Repository:** [github.com/Steffen025/pai-opencode](https://github.com/Steffen025/pai-opencode)
+```
+
+---
+
 ## Version History
 
 | Version | Date | Change |
@@ -521,7 +557,8 @@ v0.1 ────┬──→ v0.2 ──┬──→ v0.3 ──→ v0.4 ──
 | 2.1.0 | 2026-01-01 | Hook/Plugin incompatibility discovery |
 | 2.2.0 | 2026-01-01 | Research complete, estimates added |
 | **3.0.0** | 2026-01-01 | **COMPLETE REWRITE** - Public/Private split. v1.0 = Pure PAI 2.0 → OpenCode port (PUBLIC). Jeremy identity moved to separate private project. New versioning: v0.1-v0.9 milestones to v1.0 release. |
+| **3.1.0** | 2026-01-01 | Added Community Updates section with milestone tracking for Discussion thread updates. |
 
 ---
 
-**ROADMAP v3.0.0 - END OF DOCUMENT**
+**ROADMAP v3.1.0 - END OF DOCUMENT**
