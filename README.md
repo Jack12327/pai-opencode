@@ -6,6 +6,8 @@
 
 > A community-driven port of Daniel Miessler's PAI 2.0 from Claude Code to OpenCode
 
+![PAI-OpenCode Hero Banner](docs/images/hero-banner.png)
+
 ---
 
 ## Vision
@@ -31,6 +33,8 @@ PAI-OpenCode brings the power of PAI (Personal AI Infrastructure) to the OpenCod
 ### Why PAI Matters
 
 PAI transforms AI coding assistants from reactive chat interfaces into proactive, context-aware systems with memory, specialized expertise, and systematic workflows. It's the difference between talking to a chatbot and collaborating with a team of specialized experts who understand your context, maintain continuity across sessions, and follow disciplined development practices.
+
+![PAI 2.0 Architecture](docs/images/architecture.png)
 
 ---
 
@@ -142,6 +146,8 @@ PAI-OpenCode makes **6 key technical decisions** documented in our Constitution:
 | **Directory Structure** | Clean `.opencode/` | Project-level config, not global, with converter for PAI updates |
 
 **Guiding Principle:** *Import capability over backwards compatibility.* We build on OpenCode natively while maintaining the ability to import PAI 2.0 updates via our converter tool.
+
+![Migration Flow: Claude Code to OpenCode](docs/images/migration-flow.png)
 
 **Full Technical Decisions:** See [constitution.md](constitution.md) Section IX for detailed rationale.
 
