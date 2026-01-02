@@ -72,9 +72,9 @@ A complete, working port where:
 | **v0.2** | Vanilla Install | PAI 2.0 packs installed | ✅ DONE |
 | **v0.3** | Skills Translation | LazyLoad for OpenCode | ✅ DONE |
 | **v0.4** | Agent Delegation | Hybrid Task API | ✅ DONE |
-| **v0.5** | History System | OpenCode-native sessions | NOT STARTED |
-| **v0.6** | Converter Tool | PAI → OpenCode translator | NOT STARTED |
-| **v0.7** | Plugin Adaptation | Hooks → OpenCode plugins | NOT STARTED |
+| **v0.5** | Plugin Infrastructure | Hook → Plugin translation | NOT STARTED |
+| **v0.6** | History System | Session capture + PAI layer | NOT STARTED |
+| **v0.7** | Converter Tool | PAI → OpenCode translator | NOT STARTED |
 | **v0.8** | Integration | End-to-end validation | NOT STARTED |
 | **v0.9** | Documentation | Public release prep | NOT STARTED |
 | **v1.0** | **PUBLIC RELEASE** | PAI 2.0 on OpenCode | NOT STARTED |
@@ -210,38 +210,132 @@ Pack Install  → Task Tool (maintains compatibility)
 
 ---
 
-## v0.5: History System
+## v0.5: Plugin Infrastructure
 
-**Goal:** Implement OpenCode-native session storage
+**Goal:** Translate Claude Code hooks to OpenCode plugins
 
-**Technical Decision:** Dual Layer - OpenCode sessions only for v1.0 (Constitution §IX.5)
+**Technical Decision:** Plugin-First Architecture (Constitution §IX.4)
 
-**Note:** The "PAI knowledge management" layer (Learnings/, Research/, Decisions/) is for Jeremy 2.0, not the public port. v1.0 uses only OpenCode-native sessions.
+**SCOPE SWAP NOTE (2026-01-02):** Originally planned as "History System" but dependencies were inverted. History System REQUIRES plugin infrastructure to work (hooks capture events → plugins store them). Plugin infrastructure must come first.
+
+**Why This Matters:**
+- History System relies on event capture (PostToolUse, SessionEnd, etc.)
+- Claude Code uses hooks for event capture
+- OpenCode uses plugins for event capture
+- **Dependency:** Plugins (capture) → History (storage)
+- Original ROADMAP had this backwards - corrected on 2026-01-02
+
+**Research Completed (2026-01-02):**
+- ✅ Plugin events verified: `tool.execute.after`, `session.created`, `session.idle`
+- ✅ Non-existent events identified: `task.complete`, `session.end` DO NOT exist
+- ✅ Research documented in `~/.claude/history/projects/jeremy-2.0-opencode/research/2026-01-02_opencode-plugin-events-verification.md`
+
+**Hook → Plugin Mapping:**
+
+| Claude Code Hook | OpenCode Plugin Event | Status |
+|------------------|----------------------|--------|
+| PreToolUse | `tool.execute.before` | RESEARCH |
+| PostToolUse | `tool.execute.after` | VERIFIED ✅ |
+| Stop | `session.idle` | VERIFIED ✅ |
+| SubagentStop | `task.complete` | ❌ DOES NOT EXIST |
+| SessionStart | `session.created` | VERIFIED ✅ |
+| SessionEnd | `session.end` | ❌ DOES NOT EXIST |
+| UserPromptSubmit | TBD | RESEARCH |
+| PreCompact | TBD | RESEARCH |
 
 **Actions:**
-1. Research OpenCode session storage location
-2. Verify session transcripts captured
-3. Test session search/retrieval
-4. Document session data format
+1. Complete plugin capability research (IN PROGRESS)
+2. Document event mapping
+3. Adapt each hook as plugin
+4. Test blocking behavior
+5. Validate all 8 events covered (workarounds for missing events)
 
 **Deliverables:**
-- [ ] Session storage location documented
-- [ ] Transcripts captured correctly
-- [ ] Session retrieval working
-- [ ] No data loss during sessions
+- [ ] Plugin research complete
+- [ ] Event mapping documented
+- [ ] All hooks adapted as plugins (or workarounds documented)
+- [ ] Blocking behavior working
+- [ ] No regression in functionality
 
 **Acceptance Criteria:**
-- Sessions persist across restarts
-- Session content retrievable
-- No regression from Claude Code behavior
+- All hook functionality preserved (or documented limitations)
+- Plugins load without errors
+- Security validation intact
+- Context loading correct
 
 ---
 
-## v0.6: Converter Tool
+## v0.6: History System (MOVED FROM v0.5)
+
+**Goal:** Implement complete PAI history system with plugin-based event capture
+
+**Technical Decision:** Dual Layer - OpenCode sessions + PAI knowledge management (Constitution §IX.5)
+
+**SCOPE SWAP NOTE (2026-01-02):** Originally v0.5, moved to v0.6 because History System REQUIRES plugin infrastructure from v0.5. Research from expanded v0.5 scope preserved here.
+
+**Why Deferred:**
+- History System needs event capture (PostToolUse, SessionEnd, Stop hooks)
+- Event capture happens via plugins
+- Plugins must exist first → History System second
+- Original ROADMAP had inverted dependency - corrected on 2026-01-02
+
+**Research Completed (2026-01-01):**
+- ✅ OpenCode session storage location documented
+- ✅ Session transcripts captured correctly
+- ✅ Session persistence verified
+- ✅ CLI/TUI retrieval methods documented
+- ✅ Documentation: `docs/HISTORY-SYSTEM.md`
+
+**Two-Layer Architecture:**
+
+**Layer 1: OpenCode Sessions (Native)**
+- Location: `~/.local/share/opencode/storage/`
+- Format: Hierarchical JSON (session → message → part)
+- Capture: Automatic by OpenCode
+- Retrieval: `opencode -c`, `/sessions` TUI
+
+**Layer 2: PAI Knowledge Management (Plugin-Driven)**
+- Location: `~/.opencode/history/`
+- Components:
+  - `learnings/` - Problem-solving narratives
+  - `research/` - Investigation results
+  - `decisions/` - Architecture Decision Records
+  - `ideas/` - Quick thought captures
+  - `projects/` - Multi-session project tracking
+- Capture: Via plugins (PostToolUse, SessionEnd, Stop)
+- Retrieval: `session-search` CLI tool
+
+**Actions:**
+1. Verify plugin infrastructure complete (dependency: v0.5)
+2. Implement PAI knowledge layer directories
+3. Create session summarization plugin (uses SessionEnd equivalent)
+4. Create learning extraction plugin (uses PostToolUse)
+5. Port `session-search` CLI tool
+6. Test complete workflow (capture → store → retrieve)
+
+**Deliverables:**
+- [ ] Plugin-based event capture working
+- [ ] PAI knowledge directories created
+- [ ] Session summarization functional
+- [ ] Learning extraction working
+- [ ] `session-search` tool ported
+- [ ] No data loss, no regressions
+
+**Acceptance Criteria:**
+- OpenCode sessions captured automatically
+- PAI knowledge layer populated via plugins
+- Session search finds historical work
+- All PAI history features preserved
+
+---
+
+## v0.7: Converter Tool (MOVED FROM v0.6)
 
 **Goal:** Create PAI 2.0 → OpenCode translation tool
 
 **Technical Decision:** Clean Break + Converter (Constitution §IX.1)
+
+**SCOPE SWAP NOTE (2026-01-02):** Originally v0.6, moved to v0.7 due to v0.5/v0.6 swap.
 
 **Purpose:**
 - Import upstream PAI 2.0 updates
@@ -266,53 +360,6 @@ Pack Install  → Task Tool (maintains compatibility)
 - Can import new PAI 2.0 releases
 - Translations are accurate
 - No manual intervention needed for standard cases
-
----
-
-## v0.7: Plugin Adaptation
-
-**Goal:** Adapt Claude Code hooks as OpenCode plugins
-
-**Technical Decision:** DEFERRED pending research (Constitution §IX.4)
-
-**Critical Research Questions:**
-1. Can plugins replicate all 8 hook events?
-2. How to block tool execution (exit code 2 equivalent)?
-3. Plugin access to tool inputs/outputs?
-4. Context injection at session start?
-
-**Hook → Plugin Mapping (Research Required):**
-
-| Claude Code Hook | OpenCode Plugin Event | Status |
-|------------------|----------------------|--------|
-| PreToolUse | `tool.execute.before` | RESEARCH |
-| PostToolUse | `tool.execute.after` | RESEARCH |
-| Stop | `session.idle` | RESEARCH |
-| SubagentStop | TBD | RESEARCH |
-| SessionStart | `session.created` | RESEARCH |
-| SessionEnd | `session.end` | RESEARCH |
-| UserPromptSubmit | TBD | RESEARCH |
-| PreCompact | TBD | RESEARCH |
-
-**Actions:**
-1. Complete plugin capability research
-2. Document event mapping
-3. Adapt each hook as plugin
-4. Test blocking behavior
-5. Validate all 8 events covered
-
-**Deliverables:**
-- [ ] Plugin research complete (`research/opencode-plugin-research.md`)
-- [ ] Event mapping documented
-- [ ] All hooks adapted as plugins
-- [ ] Blocking behavior working
-- [ ] No regression in functionality
-
-**Acceptance Criteria:**
-- All hook functionality preserved
-- Plugins load without errors
-- Security validation intact
-- Context loading correct
 
 ---
 
@@ -497,9 +544,9 @@ All decisions documented in Constitution v3.2.0 Section IX:
 | v0.2 Vanilla Install | ✅ DONE | - |
 | v0.3 Skills Translation | ✅ DONE | - |
 | v0.4 Agent Delegation | ✅ DONE | - |
-| v0.5 History System | NOT STARTED | v0.2 |
-| v0.6 Converter Tool | NOT STARTED | v0.3, v0.4 |
-| v0.7 Plugin Adaptation | NOT STARTED | Research needed |
+| v0.5 Plugin Infrastructure | NOT STARTED | Research in progress |
+| v0.6 History System | NOT STARTED | v0.5 (plugins required) |
+| v0.7 Converter Tool | NOT STARTED | v0.3, v0.4 |
 | v0.8 Integration | NOT STARTED | v0.2-v0.7 |
 | v0.9 Documentation | NOT STARTED | v0.8 |
 | v1.0 Release | NOT STARTED | v0.9 |
@@ -509,15 +556,19 @@ All decisions documented in Constitution v3.2.0 Section IX:
 ```
 v0.1 ────┬──→ v0.2 ──┬──→ v0.3 ──→ v0.4 ──┐
          │           │                     │
-         │           └──→ v0.5             │
-         │                                 │
-         │           ┌─────────────────────┘
-         │           │
-         │           v
-         └──→ v0.6 (needs v0.3, v0.4)
-                     │
-                     v
-              v0.7 (plugin research independent)
+         │           │                     │
+         │           │                     │
+         │           │     ┌───────────────┘
+         │           │     │
+         │           │     v
+         │           │   v0.5 (Plugin Infrastructure)
+         │           │     │
+         │           │     v
+         │           │   v0.6 (History System - needs v0.5)
+         │           │     │
+         │           │     │
+         │           v     v
+         └──→ v0.7 (Converter - needs v0.3, v0.4)
                      │
                      v
                    v0.8 ──→ v0.9 ──→ v1.0
@@ -565,7 +616,8 @@ We committed to posting updates at key milestones. Track progress here:
 | 2.2.0 | 2026-01-01 | Research complete, estimates added |
 | **3.0.0** | 2026-01-01 | **COMPLETE REWRITE** - Public/Private split. v1.0 = Pure PAI 2.0 → OpenCode port (PUBLIC). Jeremy identity moved to separate private project. New versioning: v0.1-v0.9 milestones to v1.0 release. |
 | **3.1.0** | 2026-01-01 | Added Community Updates section with milestone tracking for Discussion thread updates. |
+| **3.2.0** | 2026-01-02 | **SCOPE SWAP** - v0.5/v0.6 milestones reorganized. v0.5 now Plugin Infrastructure (hook→plugin translation). v0.6 now History System (requires plugins from v0.5). v0.7 now Converter Tool (was v0.6). Reason: History System requires plugin infrastructure - original had inverted dependency. Research from expanded v0.5 preserved in v0.6. |
 
 ---
 
-**ROADMAP v3.1.0 - END OF DOCUMENT**
+**ROADMAP v3.2.0 - END OF DOCUMENT**

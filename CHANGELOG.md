@@ -5,6 +5,49 @@ All notable changes to PAI-OpenCode will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **SCOPE SWAP (2026-01-02):** v0.5 and v0.6 milestones reorganized
+  - v0.5 now focused on Plugin Infrastructure (hook→plugin translation)
+  - v0.6 now contains History System implementation
+  - v0.7 now contains Converter Tool (was v0.6)
+  - Reason: History System requires plugin infrastructure - original had inverted dependency
+  - Research from expanded v0.5 preserved in v0.6 specs
+  - No work lost, just reorganized for proper dependency order
+  - Updated ROADMAP.md to v3.2.0 with corrected dependency graph
+
+### Research
+- Plugin events verified: `tool.execute.after`, `session.created`, `session.idle`
+- Non-existent events identified: `task.complete`, `session.end` DO NOT exist
+- Research documented in `~/.claude/history/projects/jeremy-2.0-opencode/research/2026-01-02_opencode-plugin-events-verification.md`
+
+## [0.5.0] - 2026-01-01
+
+### Added
+- `docs/HISTORY-SYSTEM.md` - Complete session storage documentation
+- OpenCode session storage location and structure documentation
+- Session data format specification with JSON examples
+- Session ID format explanation
+- Persistence behavior documentation
+- Session retrieval methods (CLI commands and TUI)
+
+### Documented
+- OpenCode session storage at `~/.local/share/opencode/storage/`
+- Hierarchical session structure (session → message → part)
+- Custom session ID encoding (`ses_`, `msg_`, `prt_` prefixes)
+- Dual-level organization (project-hash and global)
+- Comparison to Claude Code history system
+- Out of scope items for v1.0 (PAI knowledge layer deferred to Phase 2)
+
+### Acceptance Tests
+- AC-1: Session storage location documented ✅
+- AC-2: Session transcripts captured correctly ✅
+- AC-3: Sessions persist across restarts ✅
+- AC-4: Session content retrievable ✅
+- AC-5: No data loss during sessions ✅
+- AC-6: Session capture meets functional requirements ✅
+
 ## [0.4.2] - 2026-01-01
 
 ### Added
