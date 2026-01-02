@@ -68,16 +68,16 @@ A complete, working port where:
 
 | Version | Milestone | Scope | Status |
 |---------|-----------|-------|--------|
-| **v0.1** | Foundation | Workspace + Git | ✅ DONE |
+| **v0.1** | Foundation | Workspace + Git + Research | ✅ DONE |
 | **v0.2** | Vanilla Install | PAI 2.0 packs installed | ✅ DONE |
 | **v0.3** | Skills Translation | LazyLoad for OpenCode | ✅ DONE |
 | **v0.4** | Agent Delegation | Hybrid Task API | ✅ DONE |
-| **v0.5** | Plugin Infrastructure | Hook → Plugin translation | NOT STARTED |
-| **v0.6** | History System | Session capture + PAI layer | NOT STARTED |
-| **v0.7** | Converter Tool | PAI → OpenCode translator | NOT STARTED |
-| **v0.8** | Integration | End-to-end validation | NOT STARTED |
+| **v0.5** | Plugin Infrastructure | Hook→Plugin translation, 8 core plugin equivalents | NOT STARTED |
+| **v0.6** | History System | COMPLETE: OpenCode sessions + PAI knowledge layer | NOT STARTED |
+| **v0.7** | Converter Tool | PAI→OpenCode translator | NOT STARTED |
+| **v0.8** | Integration Testing | End-to-end validation | NOT STARTED |
 | **v0.9** | Documentation | Public release prep | NOT STARTED |
-| **v1.0** | **PUBLIC RELEASE** | PAI 2.0 on OpenCode | NOT STARTED |
+| **v1.0** | **PUBLIC RELEASE** | Community-ready vanilla PAI 2.0 | NOT STARTED |
 
 ---
 
@@ -212,36 +212,38 @@ Pack Install  → Task Tool (maintains compatibility)
 
 ## v0.5: Plugin Infrastructure
 
-**Goal:** Translate Claude Code hooks to OpenCode plugins
+**Goal:** Translate Claude Code hooks to OpenCode plugins (8 core plugins)
 
 **Technical Decision:** Plugin-First Architecture (Constitution §IX.4)
 
-**SCOPE SWAP NOTE (2026-01-02):** Originally planned as "History System" but dependencies were inverted. History System REQUIRES plugin infrastructure to work (hooks capture events → plugins store them). Plugin infrastructure must come first.
+**SPLIT/INSERT NOTE (2026-01-02):** Originally planned as "History System" but dependencies were inverted. History System REQUIRES plugin infrastructure to work. This milestone was INSERTED after discovery that event capture must come before storage.
 
 **Why This Matters:**
 - History System relies on event capture (PostToolUse, SessionEnd, etc.)
 - Claude Code uses hooks for event capture
 - OpenCode uses plugins for event capture
 - **Dependency:** Plugins (capture) → History (storage)
-- Original ROADMAP had this backwards - corrected on 2026-01-02
+- Original ROADMAP had inverted dependency - corrected via Split/Insert
 
 **Research Completed (2026-01-02):**
 - ✅ Plugin events verified: `tool.execute.after`, `session.created`, `session.idle`
 - ✅ Non-existent events identified: `task.complete`, `session.end` DO NOT exist
-- ✅ Research documented in `~/.claude/history/projects/jeremy-2.0-opencode/research/2026-01-02_opencode-plugin-events-verification.md`
+- ✅ Event name corrections applied throughout documentation
 
-**Hook → Plugin Mapping:**
+**Hook → Plugin Mapping (8 Core Plugin Equivalents for v0.5):**
 
-| Claude Code Hook | OpenCode Plugin Event | Status |
-|------------------|----------------------|--------|
-| PreToolUse | `tool.execute.before` | RESEARCH |
-| PostToolUse | `tool.execute.after` | VERIFIED ✅ |
-| Stop | `session.idle` | VERIFIED ✅ |
-| SubagentStop | `task.complete` | ❌ DOES NOT EXIST |
-| SessionStart | `session.created` | VERIFIED ✅ |
-| SessionEnd | `session.end` | ❌ DOES NOT EXIST |
-| UserPromptSubmit | TBD | RESEARCH |
-| PreCompact | TBD | RESEARCH |
+| Claude Code Hook | OpenCode Plugin Event | Status | v0.5 Priority |
+|------------------|----------------------|--------|---------------|
+| PostToolUse | `tool.execute.after` | VERIFIED ✅ | **HIGH** |
+| SessionStart | `session.created` | VERIFIED ✅ | **HIGH** |
+| Stop | `session.idle` | VERIFIED ✅ | **HIGH** |
+| PreToolUse | `tool.execute.before` | RESEARCH | **MEDIUM** |
+| SubagentStop | Filter `tool.execute.after` | WORKAROUND | **REQUIRED** |
+| SessionEnd | Filter `session.idle` | WORKAROUND | **REQUIRED** |
+| UserPromptSubmit | `message.updated` (filter: user) | WORKAROUND | **REQUIRED** |
+| PreCompact | `experimental.session.compacting` | VERIFIED ✅ | **REQUIRED** |
+
+**v0.5 Scope:** 8 core plugin equivalents (PostToolUse, SessionStart, Stop, PreToolUse, SubagentStop workaround, SessionEnd workaround, UserPromptSubmit workaround, PreCompact).
 
 **Actions:**
 1. Complete plugin capability research (IN PROGRESS)
@@ -265,19 +267,24 @@ Pack Install  → Task Tool (maintains compatibility)
 
 ---
 
-## v0.6: History System (MOVED FROM v0.5)
+## v0.6: History System
 
-**Goal:** Implement complete PAI history system with plugin-based event capture
+**Goal:** Implement OpenCode-native session storage with INDEX.json and CLI tools
 
-**Technical Decision:** Dual Layer - OpenCode sessions + PAI knowledge management (Constitution §IX.5)
+**Technical Decision:** OpenCode Sessions for v1.0 (Constitution §IX.5)
 
-**SCOPE SWAP NOTE (2026-01-02):** Originally v0.5, moved to v0.6 because History System REQUIRES plugin infrastructure from v0.5. Research from expanded v0.5 scope preserved here.
+**SPLIT/INSERT NOTE (2026-01-02):** Originally v0.5, deferred to v0.6 because History System REQUIRES plugin infrastructure from v0.5.
 
 **Why Deferred:**
-- History System needs event capture (PostToolUse, SessionEnd, Stop hooks)
-- Event capture happens via plugins
+- History System needs event capture (PostToolUse, Stop, SessionStart)
+- Event capture happens via plugins (v0.5)
 - Plugins must exist first → History System second
-- Original ROADMAP had inverted dependency - corrected on 2026-01-02
+- Original ROADMAP had inverted dependency - corrected via Split/Insert
+
+**Scope Clarification:**
+- v1.0 includes COMPLETE History System (OpenCode sessions + PAI knowledge layer)
+- PAI knowledge layer (learnings/, research/, decisions/, ideas/, projects/) is CORE v1.0 functionality
+- Focus: Complete session storage, INDEX.json, `session-search` CLI, learning extraction, research tracking
 
 **Research Completed (2026-01-01):**
 - ✅ OpenCode session storage location documented
@@ -329,13 +336,13 @@ Pack Install  → Task Tool (maintains compatibility)
 
 ---
 
-## v0.7: Converter Tool (MOVED FROM v0.6)
+## v0.7: Converter Tool
 
 **Goal:** Create PAI 2.0 → OpenCode translation tool
 
 **Technical Decision:** Clean Break + Converter (Constitution §IX.1)
 
-**SCOPE SWAP NOTE (2026-01-02):** Originally v0.6, moved to v0.7 due to v0.5/v0.6 swap.
+**SPLIT/INSERT NOTE (2026-01-02):** Originally v0.6, shifted to v0.7 due to v0.5/v0.6 reorganization.
 
 **Purpose:**
 - Import upstream PAI 2.0 updates
@@ -616,8 +623,27 @@ We committed to posting updates at key milestones. Track progress here:
 | 2.2.0 | 2026-01-01 | Research complete, estimates added |
 | **3.0.0** | 2026-01-01 | **COMPLETE REWRITE** - Public/Private split. v1.0 = Pure PAI 2.0 → OpenCode port (PUBLIC). Jeremy identity moved to separate private project. New versioning: v0.1-v0.9 milestones to v1.0 release. |
 | **3.1.0** | 2026-01-01 | Added Community Updates section with milestone tracking for Discussion thread updates. |
-| **3.2.0** | 2026-01-02 | **SCOPE SWAP** - v0.5/v0.6 milestones reorganized. v0.5 now Plugin Infrastructure (hook→plugin translation). v0.6 now History System (requires plugins from v0.5). v0.7 now Converter Tool (was v0.6). Reason: History System requires plugin infrastructure - original had inverted dependency. Research from expanded v0.5 preserved in v0.6. |
+| **3.2.0** | 2026-01-02 | **SPLIT/INSERT REORGANIZATION** - v0.5/v0.6 milestones reorganized. v0.5 now Plugin Infrastructure, v0.6 now History System (dependency fix). Deferred features documented (Voice, Observability → v1.x). Event name corrections (session.idle, tool.execute.after). |
+| **3.3.0** | 2026-01-02 | **FINAL ROADMAP APPROVAL** - All milestones finalized. Sub-milestones = tracking tool (not separate releases). Split/Insert terminology standardized. Voice/Observability deferred to v1.x. v0.5 scope = 4 core plugins. v0.6 scope = OpenCode sessions only (PAI knowledge layer → v1.x). |
+| **3.4.0** | 2026-01-02 | **HOOK MAPPING COMPLETION** - UserPromptSubmit and PreCompact researched via DeepWiki. UserPromptSubmit portable via `message.updated` filter workaround. PreCompact portable via `experimental.session.compacting`. Both moved from Deferred → REQUIRED (v0.5). v0.5 scope expanded to 8 core plugins. |
 
 ---
 
-**ROADMAP v3.2.0 - END OF DOCUMENT**
+## Deferred Features (Post-v1.0)
+
+**NOT in vanilla PAI 2.0 scope - deferred to v1.x:**
+
+| Feature | Reason for Deferral | Timeline |
+|---------|---------------------|----------|
+| **Voice System** | Optional feature (if not part of vanilla PAI 2.0) | v1.1+ |
+| **Observability Dashboard** | Community plugin phase | v1.2+ |
+| **Advanced Plugins** | Token analytics, context pruning beyond 8 core equivalents | v1.x |
+| **Daniel Miessler Packs** | Importable post-v1.0 via Converter | Post-release |
+
+**v1.0 Definition:** Pure vanilla PAI 2.0 on OpenCode with COMPLETE History System (8 core plugin equivalents + full PAI knowledge layer: learnings/, research/, decisions/, ideas/, projects/). Extensions and advanced features come in v1.x releases.
+
+**Sub-Milestone Note:** Sub-milestones (e.g., v0.5.1, v0.5.2) are tracking tools within the roadmap, NOT separate SpecFirst sessions. Each minor release (v0.5, v0.6, v0.7) = ONE SpecFirst workflow execution.
+
+---
+
+**ROADMAP v3.3.0 - END OF DOCUMENT**

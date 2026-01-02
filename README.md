@@ -70,12 +70,12 @@ PAI transforms AI coding assistants from reactive chat interfaces into proactive
 | v0.3 | Skills Translation (OpenCode lazy loading) | ✅ DONE |
 | v0.4 | Agent Delegation (Hybrid Task API) | ✅ DONE |
 | v0.4.2 | Agent Profiles (Provider switching) | ✅ DONE |
-| v0.5 | History System (OpenCode sessions) | NOT STARTED |
-| v0.6 | Converter Tool (PAI → OpenCode translator) | NOT STARTED |
-| v0.7 | Plugin Adaptation (Hooks → Plugins) | NOT STARTED |
+| v0.5 | Plugin Infrastructure (Hook→Plugin translation, 8 core plugin equivalents) | NOT STARTED |
+| v0.6 | History System (COMPLETE: OpenCode sessions + PAI knowledge layer) | NOT STARTED |
+| v0.7 | Converter Tool (PAI→OpenCode translator) | NOT STARTED |
 | v0.8 | Integration Testing (End-to-end validation) | NOT STARTED |
 | v0.9 | Documentation (Public release prep) | NOT STARTED |
-| v1.0 | **PUBLIC RELEASE** | NOT STARTED |
+| v1.0 | **PUBLIC RELEASE** (Community-ready vanilla PAI 2.0) | NOT STARTED |
 
 **Recent Achievements:**
 - **v0.3:** Skills translation with 94.96% token reduction
@@ -85,7 +85,13 @@ PAI transforms AI coding assistants from reactive chat interfaces into proactive
 
 ![v0.4 Celebration - All 7 Agents Toasting](docs/images/v0.4-celebration-toast.png)
 
-**Work in Progress:** v0.5 History System is next. Installation instructions and full functionality are progressing rapidly.
+**Work in Progress:** v0.5 Plugin Infrastructure is next. This milestone translates Claude Code hooks to OpenCode plugins (8 core equivalents), providing the event capture foundation that v0.6 History System requires.
+
+**Deferred to v1.x (Post-Release):**
+- Voice System (if not part of vanilla PAI 2.0 core)
+- Observability Dashboard (community plugins phase)
+- Advanced analytics and context pruning beyond 8 core plugins
+- Daniel Miessler's additional packs (importable via Converter)
 
 **Full Roadmap:** See [ROADMAP.md](ROADMAP.md) for detailed milestone specifications.
 
@@ -101,8 +107,8 @@ This project is a **pure vanilla PAI 2.0 port** to OpenCode. We include:
 - 8 kai-* packs (kai-core-install, kai-hook-system, etc.)
 - Skills system with progressive disclosure
 - Agent delegation (intern, engineer, architect, designer, pentester)
-- History system for session management
-- Hooks adapted as OpenCode plugins
+- COMPLETE History system (OpenCode sessions + PAI knowledge layer: learnings/, research/, decisions/, ideas/, projects/)
+- Hooks adapted as OpenCode plugins (6 core plugin equivalents)
 - Constitutional framework and Two Loops architecture
 - Voice system (if part of vanilla PAI 2.0)
 
@@ -267,18 +273,20 @@ bun tools/apply-profile.ts openai     # Use GPT-4o
 bun tools/apply-profile.ts anthropic  # Use Claude (default)
 ```
 
-**Next Focus (v0.5):**
-- OpenCode-native session storage
-- Session transcript capture
-- History system integration
+**Next Focus (v0.5 - Plugin Infrastructure):**
+- Hook → Plugin event translation (8 core plugin equivalents)
+- Event capture: `tool.execute.after`, `session.created`, `session.idle`, `tool.execute.before`
+- Workarounds for SubagentStop, SessionEnd, UserPromptSubmit (filter patterns required)
+- PreCompact via `experimental.session.compacting`
+- Foundation for v0.6 History System
 
 **Upcoming Milestones:**
-- **v0.5** - History System (OpenCode-native session storage)
-- **v0.6** - Converter Tool (PAI → OpenCode translator for updates)
-- **v0.7** - Plugin Adaptation (Hooks → OpenCode plugins)
+- **v0.5** - Plugin Infrastructure (Hook→Plugin translation, 8 core plugin equivalents)
+- **v0.6** - History System (COMPLETE: OpenCode sessions + PAI knowledge layer)
+- **v0.7** - Converter Tool (PAI→OpenCode translator for upstream updates)
 - **v0.8** - Integration Testing (End-to-end validation)
 - **v0.9** - Documentation (Public release prep)
-- **v1.0** - PUBLIC RELEASE
+- **v1.0** - PUBLIC RELEASE (Community-ready vanilla PAI 2.0)
 
 **Follow our progress:** Watch this repository or check [ROADMAP.md](ROADMAP.md) for milestone updates.
 
