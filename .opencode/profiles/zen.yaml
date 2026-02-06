@@ -1,0 +1,37 @@
+# OpenCode ZEN - Free tier (no API key required)
+# Uses opencode/ prefix models provided by OpenCode's free inference
+#
+# FREE models (as of Feb 2026):
+#   opencode/big-pickle        - Stealth model (limited time free, data may be used for improvement)
+#   opencode/glm-4.7-free      - Limited time free, data may be used for improvement
+#   opencode/kimi-k2.5-free    - Limited time free, data may be used for improvement
+#   opencode/minimax-m2.1-free - Limited time free, data may be used for improvement
+#   opencode/gpt-5-nano        - Permanently free
+#
+# NOTE: Free models may change. Run `opencode models` to see current availability.
+# NOTE: Limited-time free models collect data for improvement during free period.
+#
+name: zen
+description: OpenCode ZEN free models - no API key needed, great for getting started
+models:
+  default: opencode/kimi-k2.5-free
+
+  # 3-Tier: Most Capable → Standard → Budget
+  Algorithm: opencode/big-pickle
+  Architect: opencode/kimi-k2.5-free
+  Engineer: opencode/kimi-k2.5-free
+  general: opencode/kimi-k2.5-free
+  explore: opencode/gpt-5-nano
+  Intern: opencode/gpt-5-nano
+  writer: opencode/kimi-k2.5-free
+  ClaudeResearcher: opencode/glm-4.7-free
+  GeminiResearcher: opencode/minimax-m2.1-free
+  GrokResearcher: opencode/kimi-k2.5-free
+  PerplexityResearcher: opencode/big-pickle
+  PerplexityProResearcher: opencode/big-pickle
+  QATester: opencode/kimi-k2.5-free
+  Pentester: opencode/kimi-k2.5-free
+  Designer: opencode/kimi-k2.5-free
+  Artist: opencode/kimi-k2.5-free
+  CodexResearcher: opencode/glm-4.7-free
+  researcher: opencode/kimi-k2.5-free

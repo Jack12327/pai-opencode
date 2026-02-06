@@ -33,6 +33,7 @@ const c = {
   cyan: '\x1b[38;2;6;182;212m',
   gray: '\x1b[38;2;100;116;139m',
   magenta: '\x1b[38;2;168;85;247m',
+  dim: '\x1b[2m',
 };
 
 // Paths - OpenCode uses .opencode instead of .claude
@@ -159,6 +160,7 @@ interface InstallConfig {
   AI_NAME: string;
   CATCHPHRASE: string;
   PROVIDER: ProviderConfig;
+  MULTI_RESEARCH: boolean;
   VOICE_TYPE?: 'male' | 'female' | 'neutral';  // Deferred to v1.1
 }
 
@@ -266,13 +268,60 @@ function checkBun(): boolean {
 function generateOpencodeJson(config: InstallConfig): object {
   // NOTE: OpenCode validates its config schema strictly.
   // Custom PAI fields go in .opencode/settings.json instead.
-  return {
-    "$schema": "https://opencode.ai/config.json",
-    "theme": "dark",
-    "model": config.PROVIDER.defaultModel,
-    "snapshot": true,
-    "username": config.PRINCIPAL_NAME
-  };
+  //
+  // Agent models are loaded from provider profiles (.opencode/profiles/*.yaml).
+  // This ensures all agents get the correct model for the selected provider.
+  // To switch providers later: bun run .opencode/tools/switch-provider.ts <profile>
+  //
+  // Multi-research mode uses the shared applyProfile() from switch-provider.ts
+  // which handles both base profile loading AND researcher overlay.
+
+  // Use the same applyProfile function as the CLI tool — single source of truth
+  try {
+    const { applyProfile } = require(join(OPENCODE_DIR, 'tools', 'switch-provider.ts'));
+    applyProfile(config.PROVIDER.id, config.MULTI_RESEARCH);
+
+    // applyProfile writes opencode.json directly, so read it back
+    const generated = JSON.parse(readFileSync(join(PROJECT_ROOT, 'opencode.json'), 'utf-8'));
+
+    // Ensure username is set
+    generated.username = config.PRINCIPAL_NAME;
+
+    return generated;
+  } catch {
+    // Fallback: load profile manually if switch-provider import fails
+    const profilePath = join(OPENCODE_DIR, 'profiles', `${config.PROVIDER.id}.yaml`);
+    let agentBlock: Record<string, { model: string }> = {};
+
+    try {
+      if (existsSync(profilePath)) {
+        const { parse: parseYaml } = require('yaml');
+        const profileContent = readFileSync(profilePath, 'utf-8');
+        const profile = parseYaml(profileContent);
+
+        if (profile?.models) {
+          const { default: _default, ...agentModels } = profile.models;
+          for (const [agentName, model] of Object.entries(agentModels)) {
+            agentBlock[agentName] = { model: model as string };
+          }
+        }
+      }
+    } catch { /* proceed without agent block */ }
+
+    const result: Record<string, any> = {
+      "$schema": "https://opencode.ai/config.json",
+      "theme": "dark",
+      "model": config.PROVIDER.defaultModel,
+      "snapshot": true,
+      "username": config.PRINCIPAL_NAME
+    };
+
+    if (Object.keys(agentBlock).length > 0) {
+      result.agent = agentBlock;
+    }
+
+    return result;
+  }
 }
 
 function generateSettingsJson(config: InstallConfig): object {
@@ -325,7 +374,9 @@ function generateSettingsJson(config: InstallConfig): object {
     "provider": {
       "id": config.PROVIDER.id,
       "name": config.PROVIDER.name,
-      "model": config.PROVIDER.defaultModel
+      "model": config.PROVIDER.defaultModel,
+      "profile": config.PROVIDER.id,
+      "multiResearch": config.MULTI_RESEARCH
     }
   };
 }
@@ -520,7 +571,45 @@ async function main(): Promise<void> {
     print(selectedProvider.authNote);
   }
 
-  // Step 4: Identity
+  // Step 1b: Multi-Provider Research (optional)
+  print('');
+  print(`${c.bold}Step 1b: Research Agent Configuration${c.reset}`);
+  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
+  print(`  PAI includes specialized research agents (Gemini, Grok, Perplexity, etc.)`);
+  print(`  By default, they all use your primary provider (${c.cyan}${selectedProvider.name}${c.reset}).`);
+  print('');
+  print(`  With ${c.cyan}Multi-Provider Research${c.reset}, each researcher uses its native provider`);
+  print(`  for more diverse perspectives. This requires additional API keys.`);
+  print('');
+
+  const researchChoice = await promptChoice(
+    'How should research agents work?',
+    [
+      `Single provider ${c.gray}- All researchers use ${selectedProvider.name} (simple, no extra keys)${c.reset}`,
+      `Multi-provider ${c.gray}- Each researcher uses its native model (needs extra API keys)${c.reset}`,
+    ],
+    0,
+  );
+
+  const MULTI_RESEARCH = researchChoice === 1;
+
+  if (MULTI_RESEARCH) {
+    print('');
+    print(`  ${c.green}✓${c.reset} Multi-provider research enabled.`);
+    print(`  ${c.yellow}!${c.reset} Make sure these API keys are in ${c.cyan}~/.opencode/.env${c.reset}:`);
+    print(`    ${c.gray}GOOGLE_API_KEY${c.reset}       → GeminiResearcher    ${c.dim}(https://aistudio.google.com/apikey)${c.reset}`);
+    print(`    ${c.gray}XAI_API_KEY${c.reset}          → GrokResearcher      ${c.dim}(https://console.x.ai/)${c.reset}`);
+    print(`    ${c.gray}PERPLEXITY_API_KEY${c.reset}   → PerplexityResearcher${c.dim} (https://perplexity.ai/settings/api)${c.reset}`);
+    print(`    ${c.gray}OPENROUTER_API_KEY${c.reset}   → CodexResearcher     ${c.dim}(https://openrouter.ai/keys)${c.reset}`);
+    print('');
+    print(`  ${c.gray}Missing keys? No problem — those researchers fall back to ${selectedProvider.name}.${c.reset}`);
+  } else {
+    printSuccess(`All researchers will use ${selectedProvider.name}.`);
+    print(`  ${c.gray}You can enable multi-provider research later:${c.reset}`);
+    print(`  ${c.gray}bun run .opencode/tools/switch-provider.ts ${selectedProvider.id} --multi-research${c.reset}`);
+  }
+
+  // Step 2: Identity
   print('');
   print(`${c.bold}Step 2: Your Identity${c.reset}`);
   print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
@@ -547,6 +636,7 @@ async function main(): Promise<void> {
     AI_NAME,
     CATCHPHRASE,
     PROVIDER: selectedProvider,
+    MULTI_RESEARCH: MULTI_RESEARCH,
     VOICE_TYPE,
   };
 
@@ -611,6 +701,7 @@ async function main(): Promise<void> {
     print(`  ${c.cyan}Principal:${c.reset}   ${PRINCIPAL_NAME}`);
     print(`  ${c.cyan}Provider:${c.reset}    ${selectedProvider.name}`);
     print(`  ${c.cyan}Model:${c.reset}       ${selectedProvider.defaultModel}`);
+    print(`  ${c.cyan}Research:${c.reset}    ${MULTI_RESEARCH ? `${c.green}Multi-provider${c.reset}` : `Single provider`}`);
     print('');
     print(`${c.bold}Next Steps:${c.reset}`);
     print('');

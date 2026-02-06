@@ -1,11 +1,35 @@
+# Anthropic Claude - Recommended for best PAI experience
+# 3-Tier: Opus (deep reasoning) → Sonnet (standard) → Haiku (speed)
+#
+# Requires: ANTHROPIC_API_KEY in ~/.opencode/.env
+#
+# Available models (Feb 2026):
+#   anthropic/claude-opus-4-6    - Most capable, deep reasoning (expensive)
+#   anthropic/claude-sonnet-4-5  - Balanced standard tier (recommended default)
+#   anthropic/claude-haiku-4-5   - Fast budget tier
+#
 name: anthropic
 description: Anthropic Claude models - recommended for best quality
 models:
+  # Main model (opencode.json "model" field)
   default: anthropic/claude-sonnet-4-5
-  intern: anthropic/claude-haiku-4-5
-  engineer: anthropic/claude-sonnet-4-5
-  architect: anthropic/claude-sonnet-4-5
-  researcher: anthropic/claude-sonnet-4-5
-  designer: anthropic/claude-sonnet-4-5
-  pentester: anthropic/claude-sonnet-4-5
+
+  # 3-Tier: Most Capable → Standard → Budget
+  Algorithm: anthropic/claude-opus-4-6
+  Architect: anthropic/claude-sonnet-4-5
+  Engineer: anthropic/claude-sonnet-4-5
+  general: anthropic/claude-sonnet-4-5
+  explore: anthropic/claude-haiku-4-5
+  Intern: anthropic/claude-haiku-4-5
   writer: anthropic/claude-sonnet-4-5
+  ClaudeResearcher: anthropic/claude-sonnet-4-5
+  GeminiResearcher: anthropic/claude-sonnet-4-5
+  GrokResearcher: anthropic/claude-sonnet-4-5
+  PerplexityResearcher: anthropic/claude-sonnet-4-5
+  PerplexityProResearcher: anthropic/claude-sonnet-4-5
+  QATester: anthropic/claude-sonnet-4-5
+  Pentester: anthropic/claude-sonnet-4-5
+  Designer: anthropic/claude-sonnet-4-5
+  Artist: anthropic/claude-sonnet-4-5
+  CodexResearcher: anthropic/claude-sonnet-4-5
+  researcher: anthropic/claude-sonnet-4-5

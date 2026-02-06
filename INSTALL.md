@@ -19,13 +19,45 @@ opencode
 ```
 
 The wizard will:
-1. ✅ Check prerequisites (Go, Bun)
-2. ✅ Install OpenCode if missing
-3. ✅ Set up your identity (name, AI assistant name, timezone)
-4. ✅ Configure your AI provider (8 options: Anthropic, OpenAI, Google, Groq, AWS Bedrock, Azure, ZEN free, Ollama)
-5. ✅ Create all necessary configuration files
+1. ✅ Check prerequisites (Bun)
+2. ✅ Configure your AI provider (8 options)
+3. ✅ Ask about multi-provider research (optional — for diverse research results)
+4. ✅ Set up your identity (name, AI assistant name, timezone)
+5. ✅ Create all configuration files with optimized agent models
 
 **Takes ~2 minutes.**
+
+---
+
+## Existing OpenCode Users
+
+Already have OpenCode with `~/.opencode`? PAI-OpenCode uses a symlink approach so your config lives in a git repo:
+
+```bash
+# 1. Clone PAI-OpenCode
+git clone https://github.com/Steffen025/pai-opencode.git
+cd pai-opencode
+
+# 2. Back up your existing config
+mv ~/.opencode ~/.opencode.backup
+
+# 3. Symlink PAI-OpenCode to your home directory
+ln -s $(pwd)/.opencode ~/.opencode
+
+# 4. Run the wizard (copies nothing — works in place)
+bun run .opencode/PAIOpenCodeWizard.ts
+
+# 5. Start OpenCode
+opencode
+```
+
+**Why symlink?** Your config lives in a repo you control. Upgrades are just `git pull`. Rollback is switching the symlink back.
+
+**Want to restore your old config?**
+```bash
+rm ~/.opencode
+mv ~/.opencode.backup ~/.opencode
+```
 
 ---
 
@@ -225,109 +257,69 @@ Edit `.opencode/settings.json`:
 
 ---
 
-## API Configuration
+## Provider Configuration
 
-### Understanding the Setup
+### Switching Providers
 
-PAI-OpenCode has **two levels of AI usage**:
+PAI-OpenCode uses a **profile system** to configure all 18 agent models at once:
 
-| Level | What Uses It | Default | Full Functionality |
-|-------|--------------|---------|-------------------|
-| **Main Agent** | Your primary AI assistant | ZEN (free) | Any provider |
-| **Sub-Agents** | Intern, Architect, Engineer, etc. | Anthropic (hardcoded) | Requires Anthropic API key |
+```bash
+# Switch providers with one command
+bun run .opencode/tools/switch-provider.ts anthropic     # Claude (recommended)
+bun run .opencode/tools/switch-provider.ts openai        # GPT-4.1 / GPT-5.1
+bun run .opencode/tools/switch-provider.ts google        # Gemini 2.5
+bun run .opencode/tools/switch-provider.ts zen           # Free models (no key needed)
+bun run .opencode/tools/switch-provider.ts local         # Ollama (fully offline)
 
-**Out of the box:** The main agent works with ZEN's free models. But sub-agents (spawned via Task tool) are hardcoded to use Anthropic's API.
+# Check current configuration
+bun run .opencode/tools/switch-provider.ts --current
+```
 
-### Option A: Use Your Claude Pro/Max Subscription (Recommended)
+Each profile applies a **3-tier model strategy** (most capable → standard → budget) across all agents automatically.
 
-**Already have a Claude Pro or Max subscription?** You can use it directly with OpenCode - no API costs!
+### Multi-Provider Research (Optional)
 
-OpenCode supports connecting to your existing Anthropic subscription. This is the most cost-effective option if you're already paying for Claude.
+For richer research results from diverse AI perspectives:
 
-1. **Connect your subscription:**
-   ```
-   /login
-   ```
-   This opens a browser for authentication with your Anthropic account.
+```bash
+bun run .opencode/tools/switch-provider.ts anthropic --multi-research
+```
 
-2. **Select Claude provider:**
-   ```
-   /provider anthropic
-   ```
+This routes research agents to their native providers (Gemini, Grok, Perplexity, OpenRouter) while keeping all other agents on your primary provider.
 
-3. **Done!** Both main agent and sub-agents use your Claude subscription.
+**Required:** Add API keys to `~/.opencode/.env`:
+```bash
+GOOGLE_API_KEY=your_key        # GeminiResearcher
+XAI_API_KEY=your_key           # GrokResearcher
+PERPLEXITY_API_KEY=your_key    # PerplexityResearcher
+OPENROUTER_API_KEY=your_key    # CodexResearcher
+```
 
-**Benefits:**
-- No additional API costs
-- Uses your existing Claude Pro/Max quota
-- Full access to Claude Opus, Sonnet, Haiku
+Check which keys you have:
+```bash
+bun run .opencode/tools/switch-provider.ts --researchers
+```
 
----
+### Authentication Options
 
-### Option B: Use Anthropic API
-
-If you prefer the API (pay-per-use) instead of subscription:
-
-1. **Configure OpenCode for Anthropic API:**
-   ```bash
-   opencode config
-   # Select: anthropic
-   # Enter your API key from console.anthropic.com
-   ```
-
-2. **Done!** Both main agent and sub-agents use your Anthropic API key.
-
-**Note:** API pricing is per-token. Check [anthropic.com/pricing](https://anthropic.com/pricing) for current rates.
-
----
-
-### Option C: Use Different Providers
-
-If you want to use a different provider (OpenAI, Groq, etc.):
-
-1. **Configure main agent:**
-   ```bash
-   opencode config
-   # Select your preferred provider
-   # Enter your API key
-   ```
-
-2. **Reconfigure sub-agents:** Sub-agents are defined in skill files with hardcoded model references. To change them:
-
-   **Quick Setup Prompt** - Copy this into a new PAI-OpenCode session:
-   ```
-   I want to configure PAI-OpenCode for my setup:
-   - My name: [YOUR_NAME]
-   - AI assistant name: [ASSISTANT_NAME]
-   - My provider: [anthropic/openai/groq/etc.]
-   - My preferred model: [model-name]
-
-   Please update:
-   1. settings.json with my identity
-   2. All Task tool calls in skills to use my provider/model
-   3. Any hardcoded model references
-   ```
-
-3. **Manual agent reconfiguration:**
-
-   Search for hardcoded model references:
-   ```bash
-   grep -r "model.*sonnet\|model.*haiku\|model.*opus" .opencode/skills/
-   ```
-
-   Update each reference to your preferred model.
+| Method | How | Best For |
+|--------|-----|----------|
+| **Subscription login** | Run `/login` in OpenCode | Claude Pro/Max, ChatGPT Plus users |
+| **API key** | Add to `~/.opencode/.env` | Pay-per-use, multiple providers |
+| **ZEN free** | No setup needed | Trying PAI-OpenCode |
+| **Ollama local** | `ollama serve` | Privacy, offline use |
 
 ### API Keys Location
 
 | Provider | Where to Get Key | Models |
 |----------|-----------------|--------|
-| Anthropic | https://console.anthropic.com/ | Claude Sonnet, Haiku, Opus |
-| OpenAI | https://platform.openai.com/api-keys | GPT-4o, GPT-4o-mini, o1 |
-| Google | https://aistudio.google.com/apikey | Gemini 2.0 Flash |
-| xAI | https://console.x.ai/ | Grok 2 |
+| Anthropic | https://console.anthropic.com/ | Claude Opus 4.6, Sonnet 4.5, Haiku 4.5 |
+| OpenAI | https://platform.openai.com/api-keys | GPT-5.1, GPT-4.1, GPT-4.1-mini |
+| Google | https://aistudio.google.com/apikey | Gemini 2.5 Pro, 2.5 Flash |
+| xAI | https://console.x.ai/ | Grok 4.1 Fast |
 | Groq | https://console.groq.com/keys | Llama 3.3, Mixtral (fast!) |
-
-**Note:** OpenAI's ChatGPT Plus subscription ($20/mo) does **not** include API access. You need a separate API key.
+| Perplexity | https://perplexity.ai/settings/api | Sonar, Sonar Pro |
+| OpenRouter | https://openrouter.ai/keys | Multiple models |
 
 ---
 

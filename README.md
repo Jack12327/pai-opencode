@@ -4,12 +4,12 @@
 
 **Personal AI Infrastructure for OpenCode** — Bring Daniel Miessler's renowned PAI scaffolding to any AI provider.
 
-[![Version](https://img.shields.io/badge/Version-1.2.0-brightgreen)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-1.2.1-brightgreen)](CHANGELOG.md)
 [![OpenCode Compatible](https://img.shields.io/badge/OpenCode-Compatible-green)](https://github.com/anomalyco/opencode)
 [![PAI Version](https://img.shields.io/badge/PAI-2.5-blue)](https://github.com/danielmiessler/Personal_AI_Infrastructure)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **v1.2.0 Release** — Real-time Observability Dashboard + 14 handlers. See [CHANGELOG.md](CHANGELOG.md).
+> **v1.2.1 Release** — Provider Profile System + Multi-Provider Research. One-command provider switching with optional multi-provider research routing. See [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -65,8 +65,11 @@ bun run .opencode/PAIOpenCodeWizard.ts
 opencode
 ```
 
+> **Already using OpenCode?** If you have an existing `~/.opencode` directory, see [Existing OpenCode Users](#existing-opencode-users) in the Installation Guide for symlink setup.
+
 The wizard will ask you to:
 - Choose your AI provider (8 options: Anthropic, OpenAI, Google, Groq, AWS Bedrock, Azure, ZEN free, Ollama)
+- **Configure research agents** — single provider or multi-provider for diverse perspectives
 - Set your name and timezone
 - Name your AI assistant
 
@@ -165,27 +168,69 @@ PAI-OpenCode includes a **3-tier research system** that optimizes for both quali
 
 | Agent | Model | Specialty | Cost |
 |-------|-------|-----------|------|
-| `ClaudeResearcher` | claude-sonnet-4-5 | Academic depth, scholarly synthesis | **FREE** |
-| `GeminiResearcher` | gemini-1.5-pro | Multi-perspective analysis | ~$0.01 |
-| `GrokResearcher` | grok-4-1-fast | Contrarian, social media, X access | ~$0.01 |
-| `PerplexityResearcher` | sonar | Real-time news, breaking events | ~$0.01 |
-| `PerplexityProResearcher` | sonar-pro | Deep investigation, extensive | ~$0.05 |
-| `CodexResearcher` | gpt-4o | Technical, TypeScript-focused | ~$0.03 |
+| `ClaudeResearcher` | claude-sonnet-4-5 | Academic depth, scholarly synthesis | Included in subscription |
+| `GeminiResearcher` | google/gemini-2.5-flash | Multi-perspective analysis | ~$0.002 |
+| `GrokResearcher` | xai/grok-4-1-fast | Contrarian, social media, X access | ~$0.01 |
+| `PerplexityResearcher` | perplexity/sonar | Real-time news, breaking events | ~$0.01 |
+| `PerplexityProResearcher` | perplexity/sonar-pro | Deep investigation, extensive | ~$0.05 |
+| `CodexResearcher` | openrouter/openai/gpt-4.1 | Technical, TypeScript-focused | ~$0.03 |
 
 ### Setup
 
-Copy `.opencode/.env.example` to `.opencode/.env` and add your API keys:
+**Option 1: Wizard** — The installation wizard asks about research configuration during setup.
 
+**Option 2: CLI** — Switch to multi-provider research anytime:
 ```bash
-cp .opencode/.env.example .opencode/.env
-# Edit .env with your keys
+bun run .opencode/tools/switch-provider.ts anthropic --multi-research
 ```
 
-**Required for Standard/Extensive only:**
-- `PERPLEXITY_API_KEY` — $5/month includes sonar
-- `GOOGLE_API_KEY` — Free tier available
-- `XAI_API_KEY` — Very cheap (~$0.20/1M tokens)
-- `OPENAI_API_KEY` — For CodexResearcher
+**Required API keys** (add to `~/.opencode/.env`):
+| Key | For | Where to get |
+|-----|-----|-------------|
+| `GOOGLE_API_KEY` | GeminiResearcher | https://aistudio.google.com/apikey |
+| `XAI_API_KEY` | GrokResearcher | https://console.x.ai/ |
+| `PERPLEXITY_API_KEY` | PerplexityResearcher | https://perplexity.ai/settings/api |
+| `OPENROUTER_API_KEY` | CodexResearcher | https://openrouter.ai/keys |
+
+Missing a key? No problem — that researcher falls back to your primary provider.
+
+---
+
+## Provider Profile System
+
+PAI-OpenCode includes a **one-command provider switching** system. Switch all 18 agent models at once:
+
+```bash
+# Switch all agents to a different provider
+bun run .opencode/tools/switch-provider.ts anthropic     # Claude (recommended)
+bun run .opencode/tools/switch-provider.ts openai        # GPT-4.1 / GPT-5.1
+bun run .opencode/tools/switch-provider.ts google        # Gemini 2.5
+bun run .opencode/tools/switch-provider.ts zen           # Free tier (no API key)
+bun run .opencode/tools/switch-provider.ts local         # Ollama (offline)
+```
+
+Each profile uses a **3-tier model strategy**:
+
+| Tier | Purpose | Anthropic | OpenAI | Google |
+|------|---------|-----------|--------|--------|
+| **Most Capable** | Algorithm (orchestration) | claude-opus-4-6 | gpt-5.1 | gemini-2.5-pro |
+| **Standard** | Most agents (coding, research) | claude-sonnet-4-5 | gpt-4.1 | gemini-2.5-flash |
+| **Budget** | Explore, Intern (fast tasks) | claude-haiku-4-5 | gpt-4.1-mini | gemini-2.0-flash-lite |
+
+### Multi-Provider Research
+
+For richer research with diverse perspectives, enable multi-provider routing:
+
+```bash
+bun run .opencode/tools/switch-provider.ts anthropic --multi-research
+```
+
+This routes each research agent to its native provider while keeping all other agents on your primary provider. Requires additional API keys in `~/.opencode/.env`.
+
+Check your setup status:
+```bash
+bun run .opencode/tools/switch-provider.ts --researchers
+```
 
 ---
 

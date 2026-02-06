@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2026-02-06
+
+### Major Feature: Provider Profile System + Multi-Provider Research
+
+One-command provider switching for all 18 agent models, with optional multi-provider research routing for diverse AI perspectives.
+
+### Added
+
+#### Provider Profile System
+- **5 Provider Profiles** (`profiles/*.yaml`): Anthropic, OpenAI, Google, ZEN (free), Local (Ollama)
+- **3-Tier Model Strategy**: Each profile maps agents to Most Capable → Standard → Budget tiers
+- **`switch-provider.ts` v2.0**: CLI tool to switch all agent models with one command
+  - `bun run switch-provider.ts anthropic` — switch to Anthropic
+  - `bun run switch-provider.ts --list` — show available profiles
+  - `bun run switch-provider.ts --current` — show active configuration
+  - `bun run switch-provider.ts --researchers` — show researcher routing status
+
+#### Multi-Provider Research
+- **`--multi-research` flag**: Routes research agents to their native providers for diverse perspectives
+  - GeminiResearcher → `google/gemini-2.5-flash`
+  - GrokResearcher → `xai/grok-4-1-fast`
+  - PerplexityResearcher → `perplexity/sonar`
+  - PerplexityProResearcher → `perplexity/sonar-pro`
+  - CodexResearcher → `openrouter/openai/gpt-4.1`
+- **`researchers.yaml`**: Native researcher-to-provider mapping configuration
+- **Graceful fallback**: Missing API keys → researcher uses primary provider instead
+- **User-driven opt-in**: No automatic detection — user decides via `--multi-research` flag
+
+#### Installation Wizard Updates
+- **New Step 1b**: "Research Agent Configuration" — asks user to choose single or multi-provider research
+- **Profile-based generation**: Wizard now uses `applyProfile()` from switch-provider.ts (single source of truth)
+- **Research mode display**: Success screen shows research configuration status
+
+### Changed
+
+#### Provider Profile Models (Verified from anomalyco/opencode source)
+| Profile | Most Capable | Standard | Budget |
+|---------|-------------|----------|--------|
+| **Anthropic** | `anthropic/claude-opus-4-6` | `anthropic/claude-sonnet-4-5` | `anthropic/claude-haiku-4-5` |
+| **OpenAI** | `openai/gpt-5.1` | `openai/gpt-4.1` | `openai/gpt-4.1-mini` |
+| **Google** | `google/gemini-2.5-pro` | `google/gemini-2.5-flash` | `google/gemini-2.0-flash-lite` |
+| **ZEN** | `opencode/big-pickle` | `opencode/kimi-k2.5-free` | `opencode/gpt-5-nano` |
+| **Local** | `ollama/qwen2.5-coder:32b` | `ollama/qwen2.5-coder:7b` | `ollama/qwen2.5-coder:1.5b` |
+
+#### Documentation Overhaul
+- **README.md**: Updated Quick Start, research agent models, provider switching docs
+- **INSTALL.md**: Added "Existing OpenCode Users" section addressing symlink workflow (fixes #14)
+- **INSTALL.md**: Replaced outdated "Option A/B/C" API Configuration with profile-based switching
+- **INSTALL.md**: Updated API Keys table with current model names
+
+### Fixed
+- **ZEN profile**: Replaced non-free models (`opencode/claude-sonnet-4-5`) with actual free models
+- **OpenAI profile**: Updated from deprecated `gpt-4o`/`gpt-4o-mini` to `gpt-5.1`/`gpt-4.1`/`gpt-4.1-mini`
+- **Google profile**: Added proper 3-tier (was all `gemini-2.5-flash`), uses `gemini-2.0-flash-lite` for budget
+- **Local profile**: Added guidance comments for Ollama users on which models to pull
+- **switch-provider.ts**: Module export guard prevents CLI execution when imported by wizard
+
+### Technical Details
+- **Profile Format**: YAML files in `.opencode/profiles/` with `provider/model` format
+- **Researcher Overlay**: `researchers.yaml` defines native model + required API key per researcher
+- **API Key Detection**: Reads `~/.opencode/.env` to check for available provider keys
+- **Settings Tracking**: `settings.json` records `multiResearch` state and active profile
+
+---
+
 ## [1.2.0] - 2026-02-05
 
 ### Major Feature: Real-Time Observability Dashboard

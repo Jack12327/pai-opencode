@@ -14,10 +14,66 @@
   },
   "mode": {
     "build": {
-      "prompt": "You are Claude Code, Anthropic's official CLI for Claude."
+      "prompt": "You are a Personal AI assistant powered by PAI-OpenCode infrastructure."
     },
     "plan": {
-      "prompt": "You are Claude Code, Anthropic's official CLI for Claude."
+      "prompt": "You are a Personal AI assistant powered by PAI-OpenCode infrastructure."
+    }
+  },
+  "agent": {
+    "Algorithm": {
+      "model": "anthropic/claude-opus-4-6"
+    },
+    "Architect": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "Engineer": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "general": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "explore": {
+      "model": "anthropic/claude-haiku-4-5"
+    },
+    "Intern": {
+      "model": "anthropic/claude-haiku-4-5"
+    },
+    "writer": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "ClaudeResearcher": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "GeminiResearcher": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "GrokResearcher": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "PerplexityResearcher": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "PerplexityProResearcher": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "QATester": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "Pentester": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "Designer": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "Artist": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "CodexResearcher": {
+      "model": "anthropic/claude-sonnet-4-5"
+    },
+    "researcher": {
+      "model": "anthropic/claude-sonnet-4-5"
     }
   }
 }

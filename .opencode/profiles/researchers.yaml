@@ -1,0 +1,57 @@
+# Multi-Provider Researcher Routing
+# ═══════════════════════════════════
+#
+# PAI's research agents are designed to use DIFFERENT providers for diverse perspectives.
+# This file maps each researcher to their NATIVE provider and model.
+#
+# HOW IT WORKS:
+#   When you run `switch-provider.ts`, researchers automatically get their native
+#   models IF the required API key is found in ~/.opencode/.env
+#   If the key is missing, the researcher falls back to your primary provider.
+#
+# EXAMPLE:
+#   Primary provider: Anthropic
+#   You also have GOOGLE_API_KEY → GeminiResearcher uses google/gemini-2.5-flash
+#   You don't have XAI_API_KEY → GrokResearcher falls back to anthropic/claude-sonnet-4-5
+#
+# TO ENABLE: Add the API keys to ~/.opencode/.env:
+#   GOOGLE_API_KEY=your_key        # For GeminiResearcher
+#   XAI_API_KEY=your_key           # For GrokResearcher
+#   PERPLEXITY_API_KEY=your_key    # For PerplexityResearcher + PerplexityProResearcher
+#   OPENROUTER_API_KEY=your_key    # For CodexResearcher
+#
+# TO DISABLE: Set enabled: false below, or simply don't add the API keys.
+#
+
+enabled: true  # Set to false to always use primary provider for all researchers
+
+researchers:
+  GeminiResearcher:
+    native_model: google/gemini-2.5-flash
+    api_key_env: GOOGLE_API_KEY
+    description: "Google Gemini - multi-perspective analysis"
+    get_key_url: "https://aistudio.google.com/apikey"
+
+  GrokResearcher:
+    native_model: xai/grok-4-1-fast
+    api_key_env: XAI_API_KEY
+    description: "xAI Grok - contrarian, fact-based research"
+    get_key_url: "https://console.x.ai/"
+
+  PerplexityResearcher:
+    native_model: perplexity/sonar
+    api_key_env: PERPLEXITY_API_KEY
+    description: "Perplexity Sonar - real-time web search"
+    get_key_url: "https://www.perplexity.ai/settings/api"
+
+  PerplexityProResearcher:
+    native_model: perplexity/sonar-pro
+    api_key_env: PERPLEXITY_API_KEY
+    description: "Perplexity Sonar Pro - deep investigative research"
+    get_key_url: "https://www.perplexity.ai/settings/api"
+
+  CodexResearcher:
+    native_model: openrouter/openai/gpt-4.1
+    api_key_env: OPENROUTER_API_KEY
+    description: "OpenRouter multi-model - technical archaeology"
+    get_key_url: "https://openrouter.ai/keys"

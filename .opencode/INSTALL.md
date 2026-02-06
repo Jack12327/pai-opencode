@@ -158,12 +158,23 @@ RETENTION_HOURS=168         # Session retention (7 days)
 
 See `.opencode/observability-server/README.md` for detailed documentation.
 
+## Switching Providers
+
+After installation, switch providers anytime:
+```bash
+bun run .opencode/tools/switch-provider.ts --list       # See available profiles
+bun run .opencode/tools/switch-provider.ts anthropic    # Switch to Anthropic
+bun run .opencode/tools/switch-provider.ts --current    # Check current config
+```
+
 ## What's Included
 
 | Component | Count | Description |
 |-----------|-------|-------------|
 | Skills | 29 | PAI 2.5 skills adapted for OpenCode |
 | Agents | 16 | Named AI personalities |
+| Provider Profiles | 5 | Anthropic, OpenAI, Google, ZEN, Local |
+| Switch Tool | 1 | One-command provider switching |
 | Plugin | 1 | Unified (14 handlers: security, context, voice, sentiment, observability) |
 | Voice Server | 1 | TTS notifications (ElevenLabs/Google) |
 | Converter | 1 | For migrating PAI updates |
