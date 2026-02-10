@@ -99,7 +99,7 @@ Running the **PeopleLookup** workflow in the **OSINT** skill to research individ
 Task({ subagent_type: "PerplexityResearcher", prompt: "Research [name] professional background, career history, and credentials" })
 
 // Public Records (Claude)
-Task({ subagent_type: "ClaudeResearcher", prompt: "Search public records for [name] including court records, business filings, property" })
+Task({ subagent_type: "DeepResearcher", prompt: "Search public records for [name] including court records, business filings, property" })
 
 // Digital Footprint (Gemini)
 Task({ subagent_type: "GeminiResearcher", prompt: "Map digital footprint for [name] - domains, social media, online presence" })

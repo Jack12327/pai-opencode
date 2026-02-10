@@ -162,10 +162,9 @@ Defined by `.md` files in the agents directory:
 | `Artist` | Visual content creator |
 | `writer` | Content creation, docs, technical writing |
 | `researcher` | Web research, source verification |
-| `ClaudeResearcher` | Academic researcher (Claude WebSearch) |
+| `DeepResearcher` | Academic researcher (Claude WebSearch) |
 | `GeminiResearcher` | Multi-perspective researcher (Google Gemini) |
 | `PerplexityResearcher` | Investigative journalist (Perplexity API) |
-| `PerplexityProResearcher` | Deep investigative journalist (Perplexity Sonar Pro) |
 | `GrokResearcher` | Contrarian researcher (xAI Grok) |
 | `CodexResearcher` | Technical archaeologist (O3, GPT-5-Codex, GPT-4) |
 

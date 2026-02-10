@@ -80,8 +80,8 @@ Task({ subagent_type: "PerplexityResearcher", prompt: "Research malware associat
 Task({ subagent_type: "PerplexityResearcher", prompt: "Check reputation of [entity] via AbuseIPDB, AlienVault OTX, Cisco Talos" })
 
 // Threat Actor Profiling (Claude x2)
-Task({ subagent_type: "ClaudeResearcher", prompt: "Profile threat actors associated with [entity] using MITRE ATT&CK, Malpedia" })
-Task({ subagent_type: "ClaudeResearcher", prompt: "Research historical campaigns involving [entity]" })
+Task({ subagent_type: "DeepResearcher", prompt: "Profile threat actors associated with [entity] using MITRE ATT&CK, Malpedia" })
+Task({ subagent_type: "DeepResearcher", prompt: "Research historical campaigns involving [entity]" })
 
 // C2 Detection (Gemini x2)
 Task({ subagent_type: "GeminiResearcher", prompt: "Detect C2 indicators for [entity] - Cobalt Strike, Metasploit patterns" })
@@ -129,8 +129,8 @@ Task({ subagent_type: "PerplexityResearcher", prompt: "Search paste sites for [e
 Task({ subagent_type: "PerplexityResearcher", prompt: "Check breach databases for [entity]" })
 
 // Dark Web (Claude x2)
-Task({ subagent_type: "ClaudeResearcher", prompt: "Check ransomware leak sites for [entity]" })
-Task({ subagent_type: "ClaudeResearcher", prompt: "Search underground forum mentions for [entity]" })
+Task({ subagent_type: "DeepResearcher", prompt: "Check ransomware leak sites for [entity]" })
+Task({ subagent_type: "DeepResearcher", prompt: "Search underground forum mentions for [entity]" })
 
 // Verification (Gemini + Grok)
 Task({ subagent_type: "GeminiResearcher", prompt: "Search Telegram/Discord for [entity]" })

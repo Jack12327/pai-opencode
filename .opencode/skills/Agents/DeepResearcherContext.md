@@ -1,4 +1,4 @@
-# ClaudeResearcher Agent Context
+# DeepResearcher Agent Context
 
 **Role**: Academic researcher using Claude's WebSearch. Excels at multi-query decomposition, parallel search execution, and synthesizing scholarly sources.
 

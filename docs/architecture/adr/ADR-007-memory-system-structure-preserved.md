@@ -256,7 +256,7 @@ Rating → SIGNALS/ratings.jsonl
 
 **Check MEMORY structure exists:**
 ```bash
-cd /Users/steffen/workspace/github.com/Steffen025/pai-opencode
+cd /path/to/your/pai-opencode
 
 # Verify all directories present
 for dir in RAW WORK LEARNING RESEARCH SECURITY STATE SESSIONS; do

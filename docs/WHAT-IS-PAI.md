@@ -21,7 +21,7 @@ The quality of your AI experience isn't primarily about which language model you
 
 PAI is that infrastructure. It transforms any AI assistant into **your** AI assistant.
 
-![PAI Architecture](images/pai-architecture.png)
+![PAI Architecture](images/pai-architecture.jpg)
 
 ## Core Components
 
@@ -60,7 +60,7 @@ PAI's Agents system supports:
 
 Example: A "Challenge" agent questions your assumptions, while an "Explore" agent researches alternatives—both running in parallel on the same problem.
 
-![Skill vs Agent Flow](images/skill-vs-agent-flow.png)
+![Skill vs Agent Flow](images/skill-vs-agent-flow.jpg)
 
 ### 3. Memory
 

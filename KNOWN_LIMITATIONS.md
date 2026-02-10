@@ -1,8 +1,16 @@
-# Known Limitations (v1.1)
+# Known Limitations (v1.3)
 
 This document lists features that are planned but not yet implemented.
 
 ---
+
+## v1.3 Limitations
+
+### Model Tiers Require Dev Build
+- **Limitation:** `model_tiers` configuration in `opencode.json` requires OpenCode dev build (PR #11377)
+- **Stable releases:** Only support the default `model` field per agent (no tier routing)
+- **Workaround:** Use default models or switch to dev build
+- **See:** [docs/ADVANCED-SETUP.md](docs/ADVANCED-SETUP.md)
 
 ## Deferred to v1.2
 
@@ -44,7 +52,7 @@ This document lists features that are planned but not yet implemented.
 - [x] Security validation on tool execution
 - [x] Memory structure (capture ready)
 - [x] Skill routing and execution
-- [x] 8 AI providers supported (Anthropic, OpenAI, Google, Groq, AWS Bedrock, Azure, ZEN, Ollama)
+- [x] 3 Provider Presets supported (Anthropic Max, ZEN PAID, ZEN FREE) + Custom via [ADVANCED-SETUP.md](.opencode/ADVANCED-SETUP.md)
 
 ### PAI 2.5 Algorithm (NEW in v1.1)
 - [x] Full 7-phase Algorithm v0.2.25
@@ -127,5 +135,5 @@ The security validator blocks dangerous commands by design. If a legitimate comm
 
 ---
 
-*Last updated: 2026-02-02*
-*Version: 1.1.0*
+*Last updated: 2026-02-10*
+*Version: 1.3.0*

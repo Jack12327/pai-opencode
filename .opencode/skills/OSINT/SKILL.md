@@ -107,7 +107,7 @@ Open Source Intelligence gathering for authorized investigations.
 | Researcher | Best For |
 |------------|----------|
 | PerplexityResearcher | Current web data, social media, company updates |
-| ClaudeResearcher | Academic depth, professional backgrounds |
+| DeepResearcher | Academic depth, professional backgrounds |
 | GeminiResearcher | Multi-perspective, cross-domain connections |
 | GrokResearcher | Contrarian analysis, fact-checking |
 

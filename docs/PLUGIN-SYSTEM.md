@@ -12,7 +12,7 @@ OpenCode uses a **plugin system** to extend functionality, while Claude Code use
 
 PAI-OpenCode implements all PAI functionality in a **single unified plugin** (`plugins/pai-unified.ts`) that handles multiple lifecycle events.
 
-![Plugin Architecture](images/plugin-architecture.png)
+![Plugin Architecture](images/plugin-architecture.jpg)
 
 ---
 
@@ -27,7 +27,7 @@ PAI-OpenCode implements all PAI functionality in a **single unified plugin** (`p
 | **Configuration** | `.claude/hooks/` directory | `opencode.json` plugins array |
 | **Logging** | stdout/stderr | File logging (`/tmp/pai-opencode-debug.log`) |
 
-![Hooks vs Plugins](images/hooks-vs-plugins.png)
+![Hooks vs Plugins](images/hooks-vs-plugins.jpg)
 
 ---
 
@@ -254,7 +254,7 @@ cat /tmp/pai-opencode-debug.log | grep DEBUG
 
 ## Unified Plugin Architecture
 
-PAI-OpenCode uses **one plugin** for all functionality with **13 handlers**:
+PAI-OpenCode uses **one plugin** for all functionality with **14 handlers**:
 
 ```
 plugins/
@@ -273,6 +273,7 @@ plugins/
 │   ├── tab-state.ts            # Kitty terminal tab updates [v1.1]
 │   ├── update-counts.ts        # Skill/workflow counting [v1.1]
 │   └── response-capture.ts     # ISC tracking + learning [v1.1]
+│   ├── observability-emitter.ts  # Fire-and-forget event emission to observability server [v1.2]
 ├── adapters/
 │   └── types.ts                # Shared type definitions
 └── lib/
@@ -298,6 +299,7 @@ plugins/
 | **Learning** | rating-capture, learning-capture, isc-validator | Quality feedback loops |
 | **Observability** | work-tracker, agent-capture, response-capture | Session tracking |
 | **UX** | voice-notification, tab-state, implicit-sentiment | User experience |
+| **Observability** | observability-emitter | Event emission to external systems |
 | **Maintenance** | skill-restore, update-counts | System upkeep |
 
 ---
@@ -393,4 +395,4 @@ Tracks ISC criteria satisfaction and captures learnings.
 
 ---
 
-**PAI-OpenCode v1.1** - 13 Handlers, Full PAI 2.5 Algorithm
+**PAI-OpenCode v1.2** - 14 Handlers, Full PAI 2.5 Algorithm

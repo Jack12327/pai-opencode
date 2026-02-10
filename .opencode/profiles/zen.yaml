@@ -1,37 +1,96 @@
-# OpenCode ZEN - Free tier (no API key required)
-# Uses opencode/ prefix models provided by OpenCode's free inference
+# OpenCode ZEN FREE - Free tier (no API key required)
+# Community models with data usage tradeoff
 #
-# FREE models (as of Feb 2026):
-#   opencode/big-pickle        - Stealth model (limited time free, data may be used for improvement)
-#   opencode/glm-4.7-free      - Limited time free, data may be used for improvement
-#   opencode/kimi-k2.5-free    - Limited time free, data may be used for improvement
-#   opencode/minimax-m2.1-free - Limited time free, data may be used for improvement
-#   opencode/gpt-5-nano        - Permanently free
+# NOTE: Free models may change. Run `opencode models` to see availability.
+# NOTE: Limited-time free models collect data for improvement.
 #
-# NOTE: Free models may change. Run `opencode models` to see current availability.
-# NOTE: Limited-time free models collect data for improvement during free period.
-#
-name: zen
+name: zen-free
 description: OpenCode ZEN free models - no API key needed, great for getting started
-models:
-  default: opencode/kimi-k2.5-free
 
-  # 3-Tier: Most Capable → Standard → Budget
-  Algorithm: opencode/big-pickle
-  Architect: opencode/kimi-k2.5-free
-  Engineer: opencode/kimi-k2.5-free
-  general: opencode/kimi-k2.5-free
-  explore: opencode/gpt-5-nano
-  Intern: opencode/gpt-5-nano
-  writer: opencode/kimi-k2.5-free
-  ClaudeResearcher: opencode/glm-4.7-free
-  GeminiResearcher: opencode/minimax-m2.1-free
-  GrokResearcher: opencode/kimi-k2.5-free
-  PerplexityResearcher: opencode/big-pickle
-  PerplexityProResearcher: opencode/big-pickle
-  QATester: opencode/kimi-k2.5-free
-  Pentester: opencode/kimi-k2.5-free
-  Designer: opencode/kimi-k2.5-free
-  Artist: opencode/kimi-k2.5-free
-  CodexResearcher: opencode/glm-4.7-free
-  researcher: opencode/kimi-k2.5-free
+default_model: opencode/kimi-k2.5-free
+
+agents:
+  Algorithm:
+    model: opencode/big-pickle
+  Architect:
+    model: opencode/kimi-k2.5-free
+    tiers:
+      quick: opencode/gpt-5-nano
+      standard: opencode/kimi-k2.5-free
+      advanced: opencode/big-pickle
+  Engineer:
+    model: opencode/kimi-k2.5-free
+    tiers:
+      quick: opencode/gpt-5-nano
+      standard: opencode/kimi-k2.5-free
+      advanced: opencode/big-pickle
+  general:
+    model: opencode/kimi-k2.5-free
+    tiers:
+      quick: opencode/gpt-5-nano
+      standard: opencode/kimi-k2.5-free
+      advanced: opencode/big-pickle
+  explore:
+    model: opencode/gpt-5-nano
+  Intern:
+    model: opencode/gpt-5-nano
+    tiers:
+      quick: opencode/gpt-5-nano
+      standard: opencode/gpt-5-nano
+      advanced: opencode/kimi-k2.5-free
+  Writer:
+    model: opencode/kimi-k2.5-free
+    tiers:
+      quick: opencode/gpt-5-nano
+      standard: opencode/kimi-k2.5-free
+      advanced: opencode/big-pickle
+  DeepResearcher:
+    model: opencode/glm-4.7-free
+    tiers:
+      quick: opencode/gpt-5-nano
+      standard: opencode/glm-4.7-free
+      advanced: opencode/kimi-k2.5-free
+  GeminiResearcher:
+    model: opencode/minimax-m2.1-free
+    tiers:
+      quick: opencode/gpt-5-nano
+      standard: opencode/minimax-m2.1-free
+      advanced: opencode/kimi-k2.5-free
+  GrokResearcher:
+    model: opencode/kimi-k2.5-free
+    tiers:
+      quick: opencode/gpt-5-nano
+      standard: opencode/kimi-k2.5-free
+      advanced: opencode/big-pickle
+  PerplexityResearcher:
+    model: opencode/big-pickle
+    tiers:
+      quick: opencode/gpt-5-nano
+      standard: opencode/big-pickle
+      advanced: opencode/big-pickle
+  CodexResearcher:
+    model: opencode/glm-4.7-free
+    tiers:
+      quick: opencode/gpt-5-nano
+      standard: opencode/glm-4.7-free
+      advanced: opencode/kimi-k2.5-free
+  QATester:
+    model: opencode/kimi-k2.5-free
+  Pentester:
+    model: opencode/kimi-k2.5-free
+    tiers:
+      quick: opencode/gpt-5-nano
+      standard: opencode/kimi-k2.5-free
+      advanced: opencode/big-pickle
+  Designer:
+    model: opencode/kimi-k2.5-free
+    tiers:
+      quick: opencode/gpt-5-nano
+      standard: opencode/kimi-k2.5-free
+      advanced: opencode/big-pickle
+  Artist:
+    model: opencode/kimi-k2.5-free
+    tiers:
+      quick: opencode/gpt-5-nano
+      standard: opencode/kimi-k2.5-free
+      advanced: opencode/big-pickle

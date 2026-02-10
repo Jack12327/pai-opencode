@@ -534,7 +534,7 @@ Return ONLY "PASS" or "FAIL: <reason>"`,
     name: "no_legacy_patterns",
     agentPrompt: `Scan .opencode/ for legacy PAI patterns and verify:
 1. No "DA" variable usage (should use config)
-2. No hardcoded paths to /Users/steffen/.claude/
+2. No hardcoded paths to /Users/<username>/.claude/
 3. No references to old hook names
 4. All TypeScript is migrated (no leftover .ts in wrong locations)
 

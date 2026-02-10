@@ -2,7 +2,29 @@
 
 This guide will help you install PAI-OpenCode in under 5 minutes.
 
-![Installation Flow](docs/images/installation-flow.png)
+![Installation Flow](docs/images/installation-flow.jpg)
+
+---
+
+## Prerequisites
+
+Before running the wizard, ensure you have:
+
+1. **Git** — For cloning the repository
+   - macOS: `brew install git`
+   - Linux: `sudo apt install git`
+   - Usually pre-installed on most systems
+
+2. **Bun** — JavaScript/TypeScript runtime
+   ```bash
+   curl -fsSL https://bun.sh/install | bash
+   ```
+
+3. **Go** (1.24+) — For building OpenCode from source (required for model tiers)
+   - macOS: `brew install go`
+   - Linux: [Download from go.dev](https://go.dev/dl/)
+
+---
 
 ## Quick Install (Recommended)
 
@@ -19,13 +41,17 @@ opencode
 ```
 
 The wizard will:
-1. ✅ Check prerequisites (Bun)
-2. ✅ Configure your AI provider (8 options)
-3. ✅ Ask about multi-provider research (optional — for diverse research results)
-4. ✅ Set up your identity (name, AI assistant name, timezone)
-5. ✅ Create all configuration files with optimized agent models
+1. ✅ Check prerequisites (git, bun, go)
+2. ✅ **Build OpenCode from dev source** (required for model tiers feature)
+3. ✅ Ask you to choose a preset:
+   - **Anthropic Max** (recommended) — Best quality, full PAI experience
+   - **ZEN PAID** — Budget-friendly, paid tier models
+   - **ZEN FREE** — Try it out, free tier models
+4. ✅ Configure research agents (optional)
+5. ✅ Set up your identity (name, AI assistant name, timezone)
+6. ✅ Generate all configuration files
 
-**Takes ~2 minutes.**
+**Takes ~2-3 minutes.**
 
 ---
 
@@ -61,21 +87,6 @@ mv ~/.opencode.backup ~/.opencode
 
 ---
 
-## Prerequisites
-
-Before running the wizard, ensure you have:
-
-1. **Bun** - JavaScript/TypeScript runtime
-   ```bash
-   curl -fsSL https://bun.sh/install | bash
-   ```
-
-2. **Go** (1.24+) - For building OpenCode
-   - macOS: `brew install go`
-   - Linux: [Download from go.dev](https://go.dev/dl/)
-
----
-
 ## Windows Installation (WSL)
 
 **Native Windows is not yet supported.** Windows users can run PAI-OpenCode through WSL2 (Windows Subsystem for Linux).
@@ -102,8 +113,8 @@ Open your WSL terminal (search "Ubuntu" in Start menu):
 # Update packages
 sudo apt update && sudo apt upgrade -y
 
-# Install Go
-sudo apt install golang-go -y
+# Install Git and Go
+sudo apt install git golang-go -y
 
 # Install Bun
 curl -fsSL https://bun.sh/install | bash
@@ -149,16 +160,36 @@ explorer.exe .
 
 ---
 
+## Post-Installation
+
+After installation, see [ADVANCED-SETUP.md](docs/ADVANCED-SETUP.md) for:
+- Custom provider configuration (beyond the 3 presets)
+- Multi-provider research setup
+- Voice server configuration
+- Observability dashboard
+- Custom agent creation
+
+---
+
 ## Manual Installation
 
 If you prefer to install manually without the wizard:
 
-**Step 1:** Install OpenCode
+**Step 1:** Install OpenCode from dev source (required for model tiers)
 ```bash
-go install github.com/anomalyco/opencode@latest
+# Clone OpenCode
+cd /tmp
+git clone https://github.com/anomalyco/opencode.git
+cd opencode
+
+# Build from dev source
+go build -o opencode .
+
+# Move to PATH
+sudo mv opencode /usr/local/bin/
 ```
 
-**Step 2:** Clone the repository
+**Step 2:** Clone the PAI-OpenCode repository
 ```bash
 git clone https://github.com/Steffen025/pai-opencode.git
 cd pai-opencode
@@ -191,6 +222,8 @@ opencode
 
 If you already have a PAI installation on Claude Code, see our [Migration Guide](docs/MIGRATION.md) for step-by-step instructions on transferring your skills, agents, and memory.
 
+---
+
 ## First Run Verification
 
 After installation, verify everything works:
@@ -207,6 +240,8 @@ After installation, verify everything works:
 3. **Verify Plugins**
    - Check: `tail -f /tmp/pai-opencode-debug.log`
    - Should show: "PAI-OpenCode Plugin Loaded"
+
+---
 
 ## Troubleshooting
 
@@ -240,6 +275,25 @@ Check debug log for errors:
 cat /tmp/pai-opencode-debug.log
 ```
 
+### Model Tiers Not Working
+
+**Error: `model_tiers is not a valid property`**
+
+This means you have the **stable OpenCode installed**. The dev build is required for model tier support.
+
+**Fix:**
+```bash
+# Remove the stable version
+rm $(which opencode)
+
+# Run the wizard which builds from dev source
+bun run .opencode/PAIOpenCodeWizard.ts
+```
+
+> **Note:** The wizard builds OpenCode from source by default. If you see the error above, re-run the wizard to ensure dev build is installed.
+
+---
+
 ## Configuration
 
 ### Environment Variables
@@ -259,35 +313,36 @@ Edit `.opencode/settings.json`:
 
 ## Provider Configuration
 
-### Switching Providers
+### The Three Presets
 
-PAI-OpenCode uses a **profile system** to configure all 18 agent models at once:
+PAI-OpenCode uses a **preset system** for simplicity:
+
+| Preset | Best For | Models | Cost |
+|--------|----------|--------|------|
+| **Anthropic Max** | Best quality | Claude Opus 4.6, Sonnet 4.5 | ~$75/1M tokens |
+| **ZEN PAID** | Budget-friendly | GLM 4.7, Kimi K2.5, Gemini Flash | ~$1-15/1M tokens |
+| **ZEN FREE** | Trying it out | Free tier | **FREE** |
+
+### Switching Presets
 
 ```bash
-# Switch providers with one command
-bun run .opencode/tools/switch-provider.ts anthropic     # Claude (recommended)
-bun run .opencode/tools/switch-provider.ts openai        # GPT-4.1 / GPT-5.1
-bun run .opencode/tools/switch-provider.ts google        # Gemini 2.5
-bun run .opencode/tools/switch-provider.ts zen           # Free models (no key needed)
-bun run .opencode/tools/switch-provider.ts local         # Ollama (fully offline)
-
-# Check current configuration
-bun run .opencode/tools/switch-provider.ts --current
+# Re-run the wizard to change preset
+bun run .opencode/PAIOpenCodeWizard.ts
 ```
 
-Each profile applies a **3-tier model strategy** (most capable → standard → budget) across all agents automatically.
+### Advanced Provider Setup
+
+For custom provider configuration beyond the 3 presets, see [ADVANCED-SETUP.md](docs/ADVANCED-SETUP.md).
 
 ### Multi-Provider Research (Optional)
 
 For richer research results from diverse AI perspectives:
 
 ```bash
-bun run .opencode/tools/switch-provider.ts anthropic --multi-research
+bun run .opencode/tools/switch-provider.ts --add-researchers
 ```
 
-This routes research agents to their native providers (Gemini, Grok, Perplexity, OpenRouter) while keeping all other agents on your primary provider.
-
-**Required:** Add API keys to `~/.opencode/.env`:
+This adds research agents to your configuration. Requires additional API keys in `~/.opencode/.env`:
 ```bash
 GOOGLE_API_KEY=your_key        # GeminiResearcher
 XAI_API_KEY=your_key           # GrokResearcher
@@ -309,17 +364,17 @@ bun run .opencode/tools/switch-provider.ts --researchers
 | **ZEN free** | No setup needed | Trying PAI-OpenCode |
 | **Ollama local** | `ollama serve` | Privacy, offline use |
 
-### API Keys Location
+### API Keys for Multi-Provider Research (Optional)
 
-| Provider | Where to Get Key | Models |
-|----------|-----------------|--------|
-| Anthropic | https://console.anthropic.com/ | Claude Opus 4.6, Sonnet 4.5, Haiku 4.5 |
-| OpenAI | https://platform.openai.com/api-keys | GPT-5.1, GPT-4.1, GPT-4.1-mini |
-| Google | https://aistudio.google.com/apikey | Gemini 2.5 Pro, 2.5 Flash |
-| xAI | https://console.x.ai/ | Grok 4.1 Fast |
-| Groq | https://console.groq.com/keys | Llama 3.3, Mixtral (fast!) |
-| Perplexity | https://perplexity.ai/settings/api | Sonar, Sonar Pro |
-| OpenRouter | https://openrouter.ai/keys | Multiple models |
+The 3-preset system covers most use cases. For multi-provider research or custom providers, see [ADVANCED-SETUP.md](docs/ADVANCED-SETUP.md).
+
+| Provider | Where to Get Key | For |
+|----------|-----------------|-----|
+| Anthropic | https://console.anthropic.com/ | Claude models (via Anthropic Max) |
+| Google | https://aistudio.google.com/apikey | GeminiResearcher |
+| xAI | https://console.x.ai/ | GrokResearcher |
+| Perplexity | https://perplexity.ai/settings/api | PerplexityResearcher |
+| OpenRouter | https://openrouter.ai/keys | CodexResearcher |
 
 ---
 
@@ -376,6 +431,9 @@ See [.opencode/observability-server/README.md](.opencode/observability-server/RE
 - Read [docs/WHAT-IS-PAI.md](docs/WHAT-IS-PAI.md) for PAI fundamentals
 - Explore [docs/OPENCODE-FEATURES.md](docs/OPENCODE-FEATURES.md) for OpenCode features
 - Check [ROADMAP.md](ROADMAP.md) for upcoming features
+- See [ADVANCED-SETUP.md](docs/ADVANCED-SETUP.md) for custom configuration
+
+---
 
 ## Getting Help
 

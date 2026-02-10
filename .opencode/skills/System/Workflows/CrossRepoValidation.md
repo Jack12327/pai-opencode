@@ -39,8 +39,8 @@ Validates isolation between repositories:
 
 ```typescript
 // 1. Locate both repositories
-const privateRepo = "/Users/steffen/workspace/github.com/Steffen025/jeremy-2.0-claudecode"
-const publicRepo = "/Users/steffen/workspace/github.com/Steffen025/pai-opencode"
+const privateRepo = "/path/to/your/private-pai-repo"
+const publicRepo = "/path/to/your/public-pai-repo"
 
 // 2. Compare directory structures
 // 3. Scan for sensitive patterns
@@ -328,14 +328,14 @@ Generated: {timestamp}
 ## Repository Status
 
 **Private Repository**
-- Path: /Users/steffen/workspace/github.com/Steffen025/jeremy-2.0-claudecode
-- Remote: git@github.com:Steffen025/jeremy-2.0-claudecode.git
+- Path: /path/to/your/private-pai-repo
+- Remote: git@github.com:your-username/your-private-repo.git
 - Branch: main
 - Last Commit: {hash} - {subject}
 
 **Public Repository**
-- Path: /Users/steffen/workspace/github.com/Steffen025/pai-opencode
-- Remote: git@github.com:Steffen025/pai-opencode.git
+- Path: /path/to/your/public-pai-repo
+- Remote: git@github.com:your-username/your-public-repo.git
 - Branch: main
 - Last Commit: {hash} - {subject}
 

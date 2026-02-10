@@ -43,8 +43,8 @@ agents:
       presence who never gives up on you.
 
   # === RESEARCHERS ===
-  ClaudeResearcher:
-    id: ClaudeResearcher
+  DeepResearcher:
+    id: DeepResearcher
     name: Ava Sterling
     display_name: Ava (Claude)
     archetype: analyst

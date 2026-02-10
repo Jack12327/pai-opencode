@@ -13,9 +13,9 @@
 
 | Topic Type | Best Agent | Why | Cost |
 |------------|------------|-----|------|
-| **Default** | `ClaudeResearcher` | Academic depth, FREE | $0 |
+| **Default** | `DeepResearcher` | Academic depth, FREE | $0 |
 | Breaking news (last hour) | `PerplexityResearcher` | Real-time search | ~$0.01 |
-| **Technical, scholarly** | `ClaudeResearcher` | Academic depth | $0 |
+| **Technical, scholarly** | `DeepResearcher` | Academic depth | $0 |
 
 ## Workflow
 
@@ -26,7 +26,7 @@
 ```typescript
 // DEFAULT - Claude (FREE, academic depth)
 Task({
-  subagent_type: "ClaudeResearcher",
+  subagent_type: "DeepResearcher",
   description: "[topic] quick lookup",
   prompt: "Do ONE web search for: [query]. Return the key findings immediately. Keep it brief and factual."
 })

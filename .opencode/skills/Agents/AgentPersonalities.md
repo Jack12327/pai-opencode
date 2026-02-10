@@ -189,7 +189,7 @@ The voice server extracts the JSON block below to configure agent voices:
       "description": "US Female - Investigative analyst: triple-checks sources, connects dots others miss, confident from being proven right",
       "type": "Premium"
     },
-    "ClaudeResearcher": {
+    "DeepResearcher": {
       "voice_id": "AXdMgz6evoL7OPd7eU12",
       "voice_name": "Ava (Premium)",
       "name": "Ava Sterling",

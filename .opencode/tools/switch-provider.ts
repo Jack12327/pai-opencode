@@ -15,7 +15,7 @@
  *   bun run switch-provider.ts --current                   # Show current config
  *   bun run switch-provider.ts --researchers               # Show researcher routing
  *
- * @version 2.0.0
+ * @version 3.0.0
  */
 
 import { existsSync, readFileSync, writeFileSync, readdirSync } from "fs";
@@ -46,15 +46,20 @@ const c = {
 };
 
 // Types
-interface ProfileModels {
-  default: string;
-  [agentName: string]: string;
+interface AgentConfig {
+  model: string;
+  tiers?: {
+    quick?: string;
+    standard?: string;
+    advanced?: string;
+  };
 }
 
 interface Profile {
   name: string;
   description: string;
-  models: ProfileModels;
+  default_model: string;
+  agents: Record<string, AgentConfig>;
 }
 
 interface ResearcherConfig {
@@ -123,11 +128,11 @@ export function loadResearchersOverlay(): ResearchersOverlay | null {
  * Checks that all required API keys exist. Fails fast if any key is missing.
  */
 export function applyResearcherOverlay(
-  agentModels: Record<string, string>,
+  agentModels: Record<string, AgentConfig>,
   overlay: ResearchersOverlay,
   envFile: Record<string, string>
 ): {
-  updatedModels: Record<string, string>;
+  updatedModels: Record<string, AgentConfig>;
   routed: Array<{ agent: string; model: string }>;
   missingKeys: Array<{ agent: string; keyNeeded: string; url: string }>;
 } {
@@ -139,7 +144,12 @@ export function applyResearcherOverlay(
     if (!(agentName in updatedModels)) continue;
 
     if (hasApiKey(config.api_key_env, envFile)) {
-      updatedModels[agentName] = config.native_model;
+      // Override the model but keep the tiers if they exist
+      const existingConfig = updatedModels[agentName];
+      updatedModels[agentName] = {
+        ...existingConfig,
+        model: config.native_model,
+      };
       routed.push({ agent: agentName, model: config.native_model });
     } else {
       missingKeys.push({
@@ -191,9 +201,9 @@ export function applyProfile(profileName: string, multiResearch = false): {
   researcherMissing: Array<{ agent: string; keyNeeded: string; url: string }>;
 } {
   const profile = loadProfile(profileName);
-  const { default: defaultModel, ...agentModels } = profile.models;
+  const { default_model, agents } = profile;
 
-  let finalAgentModels = agentModels;
+  let finalAgentModels = { ...agents };
   let researcherRouted: Array<{ agent: string; model: string }> = [];
   let researcherMissing: Array<{ agent: string; keyNeeded: string; url: string }> = [];
 
@@ -208,7 +218,7 @@ export function applyProfile(profileName: string, multiResearch = false): {
     }
 
     const envFile = loadEnvFile();
-    const result = applyResearcherOverlay(agentModels, overlay, envFile);
+    const result = applyResearcherOverlay(finalAgentModels, overlay, envFile);
     finalAgentModels = result.updatedModels;
     researcherRouted = result.routed;
     researcherMissing = result.missingKeys;
@@ -220,12 +230,32 @@ export function applyProfile(profileName: string, multiResearch = false): {
     opencodeJson = JSON.parse(readFileSync(OPENCODE_JSON_PATH, "utf-8"));
   }
 
-  opencodeJson.model = defaultModel;
+  opencodeJson.model = default_model;
 
-  const agentBlock: Record<string, { model: string }> = {};
-  for (const [agentName, model] of Object.entries(finalAgentModels)) {
-    agentBlock[agentName] = { model };
+  const agentBlock: Record<string, { model: string; model_tiers?: { [tier: string]: { model: string } } }> = {};
+  
+  for (const [agentName, agentConfig] of Object.entries(finalAgentModels)) {
+    const agentEntry: { model: string; model_tiers?: { [tier: string]: { model: string } } } = {
+      model: agentConfig.model,
+    };
+    
+    // Add model_tiers if they exist
+    if (agentConfig.tiers) {
+      agentEntry.model_tiers = {};
+      if (agentConfig.tiers.quick) {
+        agentEntry.model_tiers.quick = { model: agentConfig.tiers.quick };
+      }
+      if (agentConfig.tiers.standard) {
+        agentEntry.model_tiers.standard = { model: agentConfig.tiers.standard };
+      }
+      if (agentConfig.tiers.advanced) {
+        agentEntry.model_tiers.advanced = { model: agentConfig.tiers.advanced };
+      }
+    }
+    
+    agentBlock[agentName] = agentEntry;
   }
+  
   opencodeJson.agent = agentBlock;
 
   writeFileSync(OPENCODE_JSON_PATH, JSON.stringify(opencodeJson, null, 2) + "\n");
@@ -237,7 +267,7 @@ export function applyProfile(profileName: string, multiResearch = false): {
       settings.provider = {
         id: profile.name,
         name: profile.description,
-        model: defaultModel,
+        model: default_model,
         profile: profileName,
         multiResearch,
       };
@@ -305,7 +335,6 @@ ${c.bold}WHAT IS --multi-research?${c.reset}
     GeminiResearcher       → ${c.cyan}google/gemini-2.5-flash${c.reset}      (needs GOOGLE_API_KEY)
     GrokResearcher         → ${c.cyan}xai/grok-4-1-fast${c.reset}            (needs XAI_API_KEY)
     PerplexityResearcher   → ${c.cyan}perplexity/sonar${c.reset}             (needs PERPLEXITY_API_KEY)
-    PerplexityProResearcher→ ${c.cyan}perplexity/sonar-pro${c.reset}         (needs PERPLEXITY_API_KEY)
     CodexResearcher        → ${c.cyan}openrouter/openai/gpt-4.1${c.reset}    (needs OPENROUTER_API_KEY)
 
   Add the required API keys to ${c.cyan}~/.opencode/.env${c.reset} before using this flag.
@@ -424,7 +453,7 @@ try {
   } else {
     console.log(`${c.bold}Applied:${c.reset} ${c.green}${profile.name}${c.reset}`);
   }
-  console.log(`${c.bold}Model:${c.reset}     ${profile.models.default}`);
+  console.log(`${c.bold}Model:${c.reset}     ${profile.default_model}`);
   console.log(`${c.bold}Agents:${c.reset}    ${agentCount} configured`);
   console.log(`${c.bold}Research:${c.reset}  ${multiResearch ? `${c.green}multi-provider${c.reset}` : `${c.gray}single provider${c.reset}`}`);
 

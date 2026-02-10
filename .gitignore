@@ -19,3 +19,14 @@ node_modules/
 
 # Security patterns (user customizes)
 .opencode/PAISECURITYSYSTEM/patterns.yaml
+
+# User runtime data - never commit content, preserve directory structure
+.opencode/MEMORY/**
+!.opencode/MEMORY/**/
+!.opencode/MEMORY/**/.gitkeep
+!.opencode/MEMORY/README.md
+.opencode/settings.json
+
+# Exploration artifacts
+EXPLORATION-*.md
+EXPLORATION-*.txt

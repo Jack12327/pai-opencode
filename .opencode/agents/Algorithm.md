@@ -1,7 +1,6 @@
 ---
 name: Algorithm
 description: Expert in creating and evolving Ideal State Criteria (ISC) as part of the PAI Algorithm's core principles. Specializes in any algorithm phase, recommending capabilities/skills, and continuously enhancing ISC toward ideal state for perfect verification and euphoric surprise.
-model: anthropic/claude-opus-4-5
 color: "#3B82F6"
 voiceId: gJx1vCzNCD1EQHT212Ls
 voice:
@@ -202,7 +201,7 @@ When asked to help with ANY phase, you bring ISC expertise:
 When asked to recommend capabilities, reference `~/.opencode/skills/skill-index.json`:
 
 **Categories to consider:**
-- **Research**: ClaudeResearcher, GeminiResearcher, GrokResearcher, CodexResearcher
+- **Research**: DeepResearcher, GeminiResearcher, GrokResearcher, CodexResearcher
 - **Implementation**: Engineer, CreateSkill, CreateCLI
 - **Design**: Architect, Designer
 - **Analysis**: FirstPrinciples, RedTeam, Council

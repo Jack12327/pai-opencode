@@ -65,7 +65,7 @@ Planning -> Collection -> Processing -> Analysis -> Dissemination
 ```typescript
 // Example: Company research fleet
 Task({ subagent_type: "PerplexityResearcher", prompt: "Entity verification" })
-Task({ subagent_type: "ClaudeResearcher", prompt: "Leadership backgrounds" })
+Task({ subagent_type: "DeepResearcher", prompt: "Leadership backgrounds" })
 Task({ subagent_type: "GeminiResearcher", prompt: "Competitive analysis" })
 Task({ subagent_type: "GrokResearcher", prompt: "Risk assessment" })
 ```

@@ -72,6 +72,43 @@
 }
 ```
 
+### v1.3.0: Agent-Specific Model Routing
+
+**New in v1.3.0:** Agent-specific model configuration with tier support:
+
+```json
+{
+  "provider": {
+    "id": "anthropic",
+    "model": "anthropic/claude-opus-4-6"
+  },
+  "agent": {
+    "Engineer": {
+      "model": "opencode/glm-4.7",
+      "model_tiers": {
+        "quick": { "model": "opencode/glm-4.7" },
+        "standard": { "model": "opencode/glm-4.7" },
+        "advanced": { "model": "opencode/kimi-k2.5" }
+      }
+    },
+    "DeepResearcher": {
+      "model": "opencode/glm-4.7",
+      "model_tiers": {
+        "quick": { "model": "opencode/minimax-m2.1" },
+        "standard": { "model": "opencode/glm-4.7" },
+        "advanced": { "model": "opencode/kimi-k2.5" }
+      }
+    }
+  }
+}
+```
+
+**Key Changes:**
+- `default_model` → `model` at provider level
+- New `agent` section with per-agent model routing
+- `model_tiers`: quick/standard/advanced for cost/quality optimization
+- 16 agents with individual routing configuration
+
 ---
 
 ## Rationale
@@ -193,6 +230,8 @@ When upgrading:
   }
 }
 ```
+
+**v1.3.0 Note:** Provider switching now uses **3 presets** (Anthropic Max, ZEN PAID, ZEN FREE) instead of 8 individual providers. Use the wizard or `switch-provider.ts` tool to change profiles. Agent-specific model routing is preserved across provider switches.
 
 ### Example: Adding Plugin
 

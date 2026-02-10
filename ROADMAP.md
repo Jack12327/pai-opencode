@@ -2,34 +2,35 @@
 
 This roadmap outlines the development path from v1.0 to v2.0 and beyond.
 
-![Roadmap Timeline](docs/images/roadmap-timeline.png)
+![Roadmap Timeline](docs/images/roadmap-timeline.jpg)
 
 ## Current Release
 
-### v1.2.0 - Observability Dashboard (February 2026)
+### v1.3.0 - Multi-Provider Agent System (February 2026)
 
 **Status:** ✅ Released
 
-**Major Feature:** Real-time monitoring infrastructure with Vue 3 dashboard
+**Major Feature:** 16 specialized agents with model tier routing and 3 provider presets
 
-**What's New in v1.2:**
-- **Observability Server** - Bun HTTP server on port 8889 with SQLite persistence
-- **14 Event Types** - Session lifecycle, tool usage, agent spawning, voice notifications
-- **Vue 3 Dashboard** - Real-time stats cards, live event stream, GitHub Dark theme
-- **REST API** - Query events, sessions, and statistics with filters
-- **SSE Streaming** - Real-time event updates with pause/resume
-- **New Handler** - `observability-emitter.ts` for fire-and-forget event emission
+**What's New in v1.3:**
+- **16 Agents** - Expanded from ~11 to 16 specialized agents
+- **Model Tiers** - `quick`/`standard`/`advanced` routing per agent via `opencode.json`
+- **3 Presets** - Anthropic Max, ZEN PAID, ZEN FREE (replaces 8 provider system)
+- **Rewritten Wizard** - Prerequisites → Dev build → 3 presets → Identity → Config
+- **Researcher Renames** - `ClaudeResearcher` → `DeepResearcher`, `PerplexityProResearcher` removed
+- **Profile YAML** - New format: `default_model:` + `agents:` with optional `tiers:`
+- **Git Cleanup** - `MEMORY/` excluded from git, `.gitkeep` preserves structure
 
 **Technical Details:**
-- 14 handlers total (up from 13 in v1.1)
-- Dashboard: Vue 3.4 + Vite 5 + Tailwind CSS 3.4
-- Server: Bun + SQLite with 30-day retention
-- Non-blocking event emission (1s timeout)
+- 16 agents with tier-based routing
+- PR #11377 enables `model_tiers` support (requires dev build)
+- Simplified provider configuration (3 presets vs 8 providers)
+- Backwards-compatible wizard flow
 
 **Documentation:**
 - [CHANGELOG.md](CHANGELOG.md) - Full release notes
-- [README.md](README.md) - Updated for v1.2
-- [.opencode/observability-server/README.md](.opencode/observability-server/README.md) - Server documentation
+- [README.md](README.md) - Updated for v1.3
+- [docs/ADVANCED-SETUP.md](docs/ADVANCED-SETUP.md) - Model tier configuration
 
 ---
 
@@ -79,12 +80,12 @@ This roadmap outlines the development path from v1.0 to v2.0 and beyond.
 
 ---
 
-### v1.3.0 - Enhanced Setup & Health Monitoring (Q2 2026)
+### v1.5.0 - Enhanced Setup & Health Monitoring (Q2 2026)
 
 **Goal:** Advanced setup options and system health
 
 **Features:**
-- ✅ Basic Installation Wizard (shipped in v1.0)
+- ✅ Installation Wizard (shipped in v1.3)
 - Skill selection UI (enable/disable individual skills)
 - System health checks and diagnostics
 - Configuration validation
@@ -119,7 +120,7 @@ This roadmap outlines the development path from v1.0 to v2.0 and beyond.
    - deepwiki-enhanced (GitHub repo Q&A via Devin API)
    - Community MCP server integrations
 
-![v2.0 Architecture](docs/images/v2-architecture.png)
+![v2.0 Architecture](docs/images/v2-architecture.jpg)
 
 ---
 
@@ -138,6 +139,7 @@ We value community input! Here's how to shape PAI-OpenCode's future:
 
 | Version | Release Date | Highlights |
 |---------|-------------|------------|
+| v1.3.0  | February 2026 | Multi-Provider Agent System with Model Tiers |
 | v1.2.0  | February 2026 | Observability Dashboard + 14 handlers |
 | v1.1.0  | February 2026 | PAI 2.5 upgrade + Voice/Sentiment handlers |
 | v1.0.1  | February 2026 | Anthropic API fix, ISCValidator improvements |

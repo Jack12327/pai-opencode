@@ -74,7 +74,7 @@ Running the **WorkflowName** workflow from the **PrivateInvestigator** skill...
 Every investigation uses **15 parallel research agents** (5 types × 3 each):
 
 **Agent Types:**
-1. **ClaudeResearcher** (3 agents) - People search aggregators, professional records, location intelligence, comprehensive identity, public records, education/alumni
+1. **DeepResearcher** (3 agents) - People search aggregators, professional records, location intelligence, comprehensive identity, public records, education/alumni
 2. **GeminiResearcher** (3 agents) - Alternative identities, multi-perspective synthesis, historical context
 3. **GrokResearcher** (3 agents) - Social media deep search, contrarian analysis, real-time intelligence
 4. **CodexResearcher** (3 agents) - Username enumeration, Google dorking, technical profiles

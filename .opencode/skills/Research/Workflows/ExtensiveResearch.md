@@ -19,10 +19,9 @@ See `SKILL.md` for full URL Verification Protocol.
 "⚠️ EXTENSIVE RESEARCH COST WARNING
 
 This workflow uses 4-5 providers with 1-3 angles each:
-- ClaudeResearcher (1-3 angles) → $0 FREE
+- DeepResearcher (1-3 angles) → $0 FREE
 - GeminiResearcher (1-3 angles) → ~$0.01-0.03
 - GrokResearcher (1-3 angles) → ~$0.02-0.10
-- PerplexityProResearcher (1-3 angles) → ~$0.05-0.15
 - CodexResearcher (optional, technical topics) → ~$0.03-0.10
 
 Estimated total cost: $0.10-0.50
@@ -75,7 +74,7 @@ Generate 1-3 unique angles per researcher type based on topic breadth (see Step 
 // ALWAYS included (4 providers minimum):
 
 // Claude - academic depth (1-3 angles)
-Task({ subagent_type: "ClaudeResearcher", description: "[topic] angle 1", prompt: "Search for: [angle 1]. Return findings." })
+Task({ subagent_type: "DeepResearcher", description: "[topic] angle 1", prompt: "Search for: [angle 1]. Return findings." })
 // Add more angles if needed based on topic breadth
 
 // Gemini - multi-perspective (1-3 angles)
@@ -88,7 +87,6 @@ Task({ subagent_type: "GrokResearcher", description: "[topic] angle Y", prompt: 
 
 // Perplexity Pro - deep real-time (1-3 angles)
 // NOTE: PerplexityPROResearcher, not PerplexityResearcher!
-Task({ subagent_type: "PerplexityProResearcher", description: "[topic] angle Z", prompt: "Search for: [angle Z]. Return findings." })
 // Add more angles if needed
 
 // OPTIONAL - add for technical topics:

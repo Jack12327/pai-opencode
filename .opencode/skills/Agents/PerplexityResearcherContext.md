@@ -53,7 +53,7 @@ These are already loaded via CORE or Research skill - reference, don't duplicate
 - Broad web coverage vs. academic focus
 
 **Weaknesses (know your limits):**
-- Less depth on academic/scholarly sources (use ClaudeResearcher for that)
+- Less depth on academic/scholarly sources (use DeepResearcher for that)
 - May not have specialized industry databases
 - Real-time focus means less historical depth
 

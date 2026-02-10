@@ -1,19 +1,16 @@
 #!/usr/bin/env bun
 /**
- * PAI-OpenCode Installation Wizard
+ * PAI-OpenCode Installation Wizard v2.0
  *
- * Interactive setup that walks you through personalizing your PAI-OpenCode:
- * - Selects your AI provider (Anthropic, OpenAI, Local, ZEN free)
- * - Sets your name and timezone
- * - Names your AI assistant
- * - Configures voice settings (optional)
- * - Creates opencode.json and settings.json
- * - Fixes permissions
- *
- * Based on Daniel Miessler's PAIInstallWizard.ts, adapted for OpenCode architecture.
+ * Simplified 6-step setup for Personal AI Infrastructure:
+ * - 3 presets: Anthropic Max, ZEN PAID, ZEN FREE
+ * - OpenCode dev build as prerequisite
+ * - model_tiers support for cost-aware agent routing
+ * - Creates opencode.json, settings.json, and identity files
  *
  * Usage:
  *   bun run PAIOpenCodeWizard.ts    # Run the interactive wizard
+ *   bun run PAIOpenCodeWizard.ts --help  # Show help and exit
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
@@ -21,6 +18,7 @@ import { join, dirname } from 'path';
 import { homedir, userInfo } from 'os';
 import { execSync } from 'child_process';
 import * as readline from 'readline';
+import { parse as parseYaml } from 'yaml';
 
 // ANSI colors
 const c = {
@@ -36,132 +34,50 @@ const c = {
   dim: '\x1b[2m',
 };
 
-// Paths - OpenCode uses .opencode instead of .claude
+// Paths
 const HOME = homedir();
 const SCRIPT_DIR = dirname(new URL(import.meta.url).pathname);
 const OPENCODE_DIR = SCRIPT_DIR; // Wizard lives inside .opencode/
 const PROJECT_ROOT = dirname(OPENCODE_DIR);
-const SHELL_RC = join(HOME, process.env.SHELL?.includes('zsh') ? '.zshrc' : '.bashrc');
+const PROFILES_DIR = join(OPENCODE_DIR, 'profiles');
 
-// Provider configurations
-interface ProviderConfig {
-  name: string;
-  id: string;
-  defaultModel: string;
-  description: string;
-  authType: 'oauth' | 'apikey' | 'none';  // oauth = subscription login, apikey = env var, none = free
-  envVar?: string;
-  authNote?: string;  // Explanation shown after selection
-}
+// ============================================================================
+// PRESET CONFIGURATIONS
+// ============================================================================
 
-const PROVIDERS: ProviderConfig[] = [
-  // === TOP TIER: OAuth Login Support ===
+const PRESETS = [
   {
-    name: 'Anthropic (Claude)',
+    name: 'Anthropic Max',
     id: 'anthropic',
-    defaultModel: 'anthropic/claude-sonnet-4-5',
-    description: 'Claude models - Recommended for best PAI experience',
-    authType: 'oauth',
-    envVar: 'ANTHROPIC_API_KEY',
-    authNote: `You have two options:
-     ${c.cyan}Option A:${c.reset} Anthropic Max subscription (recommended)
-               Run ${c.green}/connect${c.reset} in OpenCode to authenticate.
-     ${c.cyan}Option B:${c.reset} API Key
-               Set ANTHROPIC_API_KEY in your environment.`,
+    profile: 'anthropic',
+    description: 'Claude models — best quality, requires Max subscription ($100/mo)',
+    authType: 'oauth' as const,
+    authNote: 'Run /connect in OpenCode to authenticate with your Anthropic Max subscription.',
   },
   {
-    name: 'OpenAI (GPT-4)',
-    id: 'openai',
-    defaultModel: 'openai/gpt-4o',
-    description: 'GPT-4 and GPT-4o models',
-    authType: 'oauth',
-    envVar: 'OPENAI_API_KEY',
-    authNote: `You have two options:
-     ${c.cyan}Option A:${c.reset} ChatGPT Plus/Pro subscription
-               Run ${c.green}/connect${c.reset} in OpenCode to authenticate.
-     ${c.cyan}Option B:${c.reset} API Key
-               Set OPENAI_API_KEY in your environment.`,
-  },
-  // === FAST INFERENCE: API Key Required ===
-  {
-    name: 'Google (Gemini)',
-    id: 'google',
-    defaultModel: 'google/gemini-2.5-pro',
-    description: 'Gemini Pro and Flash models',
-    authType: 'apikey',
-    envVar: 'GOOGLE_API_KEY',
-    authNote: `Set ${c.cyan}GOOGLE_API_KEY${c.reset} in your environment.
-     Get your API key at: https://aistudio.google.com/apikey`,
+    name: 'ZEN PAID',
+    id: 'zen-paid',
+    profile: 'zen-paid',
+    description: 'Budget-friendly pay-as-you-go — privacy-preserving, no subscription',
+    authType: 'oauth' as const,
+    authNote: 'Run /connect in OpenCode → choose ZEN to authenticate.',
   },
   {
-    name: 'Groq (Ultra Fast)',
-    id: 'groq',
-    defaultModel: 'groq/llama-3.3-70b-versatile',
-    description: 'Lightning-fast inference with Llama, Mixtral',
-    authType: 'apikey',
-    envVar: 'GROQ_API_KEY',
-    authNote: `Set ${c.cyan}GROQ_API_KEY${c.reset} in your environment.
-     Get your API key at: https://console.groq.com/keys`,
-  },
-  // === ENTERPRISE: API Key Required ===
-  {
-    name: 'AWS Bedrock',
-    id: 'bedrock',
-    defaultModel: 'bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0',
-    description: 'Claude, Llama via AWS credentials',
-    authType: 'apikey',
-    envVar: 'AWS_ACCESS_KEY_ID',
-    authNote: `Configure AWS credentials:
-     ${c.cyan}AWS_ACCESS_KEY_ID${c.reset} and ${c.cyan}AWS_SECRET_ACCESS_KEY${c.reset}
-     Optional: ${c.cyan}AWS_REGION${c.reset} (default: us-east-1)`,
-  },
-  {
-    name: 'Azure OpenAI',
-    id: 'azure',
-    defaultModel: 'azure/gpt-4o',
-    description: 'GPT models via Azure deployment',
-    authType: 'apikey',
-    envVar: 'AZURE_OPENAI_API_KEY',
-    authNote: `Set ${c.cyan}AZURE_OPENAI_API_KEY${c.reset} and ${c.cyan}AZURE_OPENAI_ENDPOINT${c.reset}
-     in your environment.`,
-  },
-  // === FREE / LOCAL OPTIONS ===
-  {
-    name: 'ZEN (Free)',
-    id: 'zen',
-    defaultModel: 'opencode/grok-code',
-    description: 'Free tier with community models - No API key needed',
-    authType: 'none',
-    authNote: `${c.green}No authentication required.${c.reset} Free community models.
-     Great for trying out PAI-OpenCode.`,
-  },
-  {
-    name: 'Local (Ollama)',
-    id: 'ollama',
-    defaultModel: 'ollama/llama3.3',
-    description: 'Run models locally - 100% private',
-    authType: 'none',
-    authNote: `${c.green}No API key needed.${c.reset}
-     Make sure Ollama is running: ${c.cyan}ollama serve${c.reset}
-     Download models: ${c.cyan}ollama pull llama3.3${c.reset}`,
+    name: 'ZEN FREE',
+    id: 'zen-free',
+    profile: 'zen',
+    description: 'Free community models — no cost, data may be used for improvement',
+    authType: 'none' as const,
+    authNote: 'No authentication needed. Free community models.',
   },
 ];
 
-// Voice deferred to v1.1 - keeping structure for future use
-const DEFAULT_VOICES = {
-  male: 'pNInz6obpgDQGcFmaJgB',      // Adam (ElevenLabs)
-  female: '21m00Tcm4TlvDq8ikWAM',    // Rachel (ElevenLabs)
-  neutral: 'ErXwobaYiN019PkySvjV',   // Antoni (ElevenLabs)
-};
-
-interface InstallConfig {
+interface PresetConfig {
   PRINCIPAL_NAME: string;
   TIMEZONE: string;
   AI_NAME: string;
   CATCHPHRASE: string;
-  PROVIDER: ProviderConfig;
-  MULTI_RESEARCH: boolean;
-  VOICE_TYPE?: 'male' | 'female' | 'neutral';  // Deferred to v1.1
+  PRESET: (typeof PRESETS)[number];
 }
 
 // ============================================================================
@@ -197,191 +113,405 @@ async function promptChoice(question: string, choices: string[], defaultIdx = 0)
   print(`  ${question}`);
   choices.forEach((choice, i) => {
     const marker = i === defaultIdx ? `${c.cyan}→${c.reset}` : ' ';
-    print(`    ${marker} ${i + 1}. ${choice}`);
+    print(`    ${marker} ${['A', 'B', 'C', 'D', 'E'][i]}. ${choice}`);
   });
 
   const rl = createReadline();
   return new Promise((resolve) => {
-    rl.question(`  ${c.gray}Enter 1-${choices.length} [${defaultIdx + 1}]:${c.reset} `, (answer) => {
+    rl.question(`  ${c.gray}Enter A-${String.fromCharCode(64 + choices.length)} [${String.fromCharCode(65 + defaultIdx)}]:${c.reset} `, (answer) => {
       rl.close();
-      const num = parseInt(answer.trim()) || (defaultIdx + 1);
-      resolve(Math.max(0, Math.min(choices.length - 1, num - 1)));
+      const letter = answer.trim().toUpperCase();
+      const num = letter.charCodeAt(0) - 65;
+      if (num >= 0 && num < choices.length) {
+        resolve(num);
+      } else {
+        resolve(defaultIdx);
+      }
     });
   });
 }
 
-// ============================================================================
-// PERMISSIONS
-// ============================================================================
-
-function fixPermissions(targetDir: string): void {
-  const info = userInfo();
-
-  print('');
-  print(`${c.bold}Fixing permissions for ${info.username}${c.reset}`);
-  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
-
+function execCommand(cmd: string, options: { cwd?: string; silent?: boolean } = {}): { success: boolean; output: string; error?: string } {
   try {
-    execSync(`chmod -R 755 "${targetDir}"`, { stdio: 'pipe' });
-    printSuccess('chmod -R 755 (make accessible)');
-
-    execSync(`chown -R ${info.uid}:${info.gid} "${targetDir}"`, { stdio: 'pipe' });
-    printSuccess(`chown -R to ${info.username}`);
-
-    // Make scripts executable
-    for (const pattern of ['*.ts', '*.sh']) {
-      try {
-        execSync(`find "${targetDir}" -name "${pattern}" -exec chmod 755 {} \\;`, { stdio: 'pipe' });
-      } catch (e) { /* ignore */ }
-    }
-    printSuccess('Set executable permissions on scripts');
-
+    const output = execSync(cmd, {
+      encoding: 'utf-8',
+      cwd: options.cwd,
+      stdio: options.silent ? 'pipe' : 'inherit',
+    });
+    return { success: true, output: output.trim() };
   } catch (err: any) {
-    printWarning(`Permission fix may need sudo: ${err.message}`);
+    return { success: false, output: '', error: err.message };
   }
 }
 
 // ============================================================================
-// BUN CHECK
+// STEP 0: PREREQUISITES CHECK
 // ============================================================================
 
-function checkBun(): boolean {
+interface PrereqCheck {
+  bun: boolean;
+  go: boolean;
+  git: boolean;
+}
+
+function checkPrerequisites(): PrereqCheck {
   print('');
-  print(`${c.bold}Checking Bun Runtime${c.reset}`);
+  print(`${c.bold}Step 0: Prerequisites Check${c.reset}`);
   print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
 
+  const results: PrereqCheck = { bun: false, go: false, git: false };
+
+  // Check bun
   try {
     const bunVersion = execSync('bun --version 2>/dev/null', { encoding: 'utf-8' }).trim();
     printSuccess(`Bun ${bunVersion} found`);
-    return true;
+    results.bun = true;
   } catch {
     printError('Bun not found');
     printInfo('Install Bun: curl -fsSL https://bun.sh/install | bash');
+  }
+
+  // Check go
+  try {
+    const goVersion = execSync('go version 2>/dev/null', { encoding: 'utf-8' }).trim();
+    printSuccess(`${goVersion} found`);
+    results.go = true;
+  } catch {
+    printError('Go not found');
+    printInfo('Install Go: https://go.dev/dl/');
+  }
+
+  // Check git
+  try {
+    const gitVersion = execSync('git --version 2>/dev/null', { encoding: 'utf-8' }).trim();
+    printSuccess(`${gitVersion} found`);
+    results.git = true;
+  } catch {
+    printError('Git not found');
+    printInfo('Install Git: https://git-scm.com/downloads');
+  }
+
+  return results;
+}
+
+// ============================================================================
+// STEP 1: BUILD OPENCODE FROM DEV SOURCE
+// ============================================================================
+
+async function buildOpenCode(): Promise<boolean> {
+  print('');
+  print(`${c.bold}Step 1: Build OpenCode from Dev Source${c.reset}`);
+  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
+  print('');
+  print(`  ${c.cyan}PAI-OpenCode requires OpenCode with model tier support${c.reset}`);
+  print(`  ${c.gray}(development build — not yet available in stable release)${c.reset}`);
+  print('');
+
+  // Check if opencode is already installed
+  const whichResult = execCommand('which opencode', { silent: true });
+  let existingVersion = '';
+
+  if (whichResult.success) {
+    const versionResult = execCommand('opencode --version', { silent: true });
+    if (versionResult.success) {
+      existingVersion = versionResult.output;
+      printInfo(`Found OpenCode: ${existingVersion}`);
+    }
+  }
+
+  print('');
+  print('  Do you want to build OpenCode from the development branch?');
+  print('');
+
+  const choices = [
+    'Yes, build now (Recommended)',
+    existingVersion ? `Skip — I already have a dev build (${existingVersion})` : 'Skip — I already have a dev build',
+    'Skip — I\'ll use stable (model tiers won\'t work)',
+  ];
+
+  const choice = await promptChoice('', choices, 0);
+
+  if (choice === 1) {
+    // Skip - user has dev build
+    printSuccess('Using existing OpenCode installation');
+    return true;
+  }
+
+  if (choice === 2) {
+    // Skip - will use stable
+    printWarning('Using stable release — model_tiers will not work');
+    printInfo('To enable model tiers later, rebuild from dev source:');
+    printInfo('  bun run .opencode/PAIOpenCodeWizard.ts');
+    return true;
+  }
+
+  // Build from dev source
+  print('');
+  print(`${c.cyan}Building OpenCode from development branch...${c.reset}`);
+  print('');
+
+  const buildDir = '/tmp/opencode-build';
+
+  try {
+    // Clean up any existing build
+    execCommand(`rm -rf ${buildDir}`, { silent: true });
+
+    // Clone the repo
+    printInfo('Cloning OpenCode repository...');
+    const cloneResult = execCommand(
+      `git clone https://github.com/nicepkg/opencode.git ${buildDir}`,
+      { silent: false }
+    );
+
+    if (!cloneResult.success) {
+      printError('Failed to clone repository');
+      return false;
+    }
+
+    // Build
+    printInfo('Building OpenCode binary...');
+    const buildResult = execCommand(
+      'go build -o opencode ./cmd/opencode',
+      { cwd: buildDir, silent: false }
+    );
+
+    if (!buildResult.success) {
+      printError('Build failed');
+      return false;
+    }
+
+    // Determine install location
+    const goBin = join(HOME, 'go', 'bin');
+    const usrLocalBin = '/usr/local/bin';
+    let installPath: string;
+
+    if (existsSync(goBin)) {
+      installPath = join(goBin, 'opencode');
+    } else {
+      installPath = join(usrLocalBin, 'opencode');
+    }
+
+    // Move binary
+    printInfo(`Installing to ${installPath}...`);
+    const moveResult = execCommand(
+      `mv ${join(buildDir, 'opencode')} ${installPath}`,
+      { silent: true }
+    );
+
+    if (!moveResult.success) {
+      printWarning('May need sudo to install to system path');
+      printInfo('Trying with sudo...');
+      const sudoResult = execCommand(
+        `sudo mv ${join(buildDir, 'opencode')} ${installPath}`,
+        { silent: false }
+      );
+      if (!sudoResult.success) {
+        printError('Installation failed');
+        return false;
+      }
+    }
+
+    // Verify
+    const verifyResult = execCommand('opencode --version', { silent: true });
+    if (verifyResult.success) {
+      printSuccess(`OpenCode ${verifyResult.output} installed`);
+    } else {
+      printWarning('Installation may have succeeded but version check failed');
+    }
+
+    // Clean up
+    execCommand(`rm -rf ${buildDir}`, { silent: true });
+    printSuccess('Cleaned up build directory');
+
+    return true;
+  } catch (err: any) {
+    printError(`Build error: ${err.message}`);
     return false;
   }
 }
 
 // ============================================================================
-// CONFIGURATION GENERATION
+// STEP 2: CHOOSE SETUP PRESET
 // ============================================================================
 
-function generateOpencodeJson(config: InstallConfig): object {
-  // NOTE: OpenCode validates its config schema strictly.
-  // Custom PAI fields go in .opencode/settings.json instead.
-  //
-  // Agent models are loaded from provider profiles (.opencode/profiles/*.yaml).
-  // This ensures all agents get the correct model for the selected provider.
-  // To switch providers later: bun run .opencode/tools/switch-provider.ts <profile>
-  //
-  // Multi-research mode uses the shared applyProfile() from switch-provider.ts
-  // which handles both base profile loading AND researcher overlay.
+async function selectPreset(): Promise<(typeof PRESETS)[number]> {
+  print('');
+  print(`${c.bold}Step 2: Choose Your Setup${c.reset}`);
+  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
+  print('');
+  print('  Choose how you want to power your AI agents:');
+  print('');
 
-  // Use the same applyProfile function as the CLI tool — single source of truth
+  const choices = PRESETS.map(p => {
+    const name = `${p.name}`;
+    const desc = p.description;
+    return `${c.bold}${name}${c.reset}\n      ${c.gray}${desc}${c.reset}`;
+  });
+
+  const choice = await promptChoice('', choices, 0);
+  const selected = PRESETS[choice];
+
+  print('');
+  printSuccess(`Selected: ${selected.name}`);
+
+  if (selected.authNote) {
+    print('');
+    print(`  ${c.bold}Authentication:${c.reset}`);
+    print(`  ${c.gray}${selected.authNote}${c.reset}`);
+  }
+
+  return selected;
+}
+
+// ============================================================================
+// STEP 3: YOUR IDENTITY
+// ============================================================================
+
+async function setupIdentity(): Promise<{ name: string; timezone: string }> {
+  print('');
+  print(`${c.bold}Step 3: Your Identity${c.reset}`);
+  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
+
+  const name = await prompt('What is your name?', 'User');
+  const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  printInfo(`Detected timezone: ${detectedTimezone}`);
+  const timezone = await prompt('Timezone (press Enter to accept)', detectedTimezone);
+
+  return { name, timezone };
+}
+
+// ============================================================================
+// STEP 4: YOUR AI ASSISTANT
+// ============================================================================
+
+async function setupAIAssistant(): Promise<{ name: string; catchphrase: string }> {
+  print('');
+  print(`${c.bold}Step 4: Your AI Assistant${c.reset}`);
+  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
+
+  const name = await prompt('Name your AI assistant', 'PAI');
+  const catchphrase = await prompt('Startup catchphrase', `${name} here, ready to help.`);
+
+  return { name, catchphrase };
+}
+
+// ============================================================================
+// STEP 5: WRITE CONFIGURATION
+// ============================================================================
+
+// Profile structure from YAML
+interface AgentTier {
+  quick?: string;
+  standard?: string;
+  advanced?: string;
+}
+
+interface AgentConfig {
+  model: string;
+  tiers?: AgentTier;
+}
+
+interface ProfileData {
+  name: string;
+  description: string;
+  default_model: string;
+  agents: Record<string, AgentConfig>;
+}
+
+function loadProfile(profileName: string): ProfileData | null {
+  const profilePath = join(PROFILES_DIR, `${profileName}.yaml`);
+
+  if (!existsSync(profilePath)) {
+    printError(`Profile not found: ${profilePath}`);
+    return null;
+  }
+
   try {
-    const { applyProfile } = require(join(OPENCODE_DIR, 'tools', 'switch-provider.ts'));
-    applyProfile(config.PROVIDER.id, config.MULTI_RESEARCH);
-
-    // applyProfile writes opencode.json directly, so read it back
-    const generated = JSON.parse(readFileSync(join(PROJECT_ROOT, 'opencode.json'), 'utf-8'));
-
-    // Ensure username is set
-    generated.username = config.PRINCIPAL_NAME;
-
-    return generated;
-  } catch {
-    // Fallback: load profile manually if switch-provider import fails
-    const profilePath = join(OPENCODE_DIR, 'profiles', `${config.PROVIDER.id}.yaml`);
-    let agentBlock: Record<string, { model: string }> = {};
-
-    try {
-      if (existsSync(profilePath)) {
-        const { parse: parseYaml } = require('yaml');
-        const profileContent = readFileSync(profilePath, 'utf-8');
-        const profile = parseYaml(profileContent);
-
-        if (profile?.models) {
-          const { default: _default, ...agentModels } = profile.models;
-          for (const [agentName, model] of Object.entries(agentModels)) {
-            agentBlock[agentName] = { model: model as string };
-          }
-        }
-      }
-    } catch { /* proceed without agent block */ }
-
-    const result: Record<string, any> = {
-      "$schema": "https://opencode.ai/config.json",
-      "theme": "dark",
-      "model": config.PROVIDER.defaultModel,
-      "snapshot": true,
-      "username": config.PRINCIPAL_NAME
-    };
-
-    if (Object.keys(agentBlock).length > 0) {
-      result.agent = agentBlock;
-    }
-
-    return result;
+    const content = readFileSync(profilePath, 'utf-8');
+    return parseYaml(content) as ProfileData;
+  } catch (err: any) {
+    printError(`Failed to parse profile: ${err.message}`);
+    return null;
   }
 }
 
-function generateSettingsJson(config: InstallConfig): object {
-  const VOICE_ID = DEFAULT_VOICES[config.VOICE_TYPE || 'male'];
+function generateOpencodeJson(profile: ProfileData, username: string): object {
+  const agentBlock: Record<string, any> = {};
+
+  // Convert profile agents to opencode.json format
+  for (const [agentName, agentConfig] of Object.entries(profile.agents)) {
+    const agentEntry: Record<string, any> = {
+      model: agentConfig.model,
+    };
+
+    // Add model_tiers if present
+    if (agentConfig.tiers) {
+      agentEntry.model_tiers = {};
+      for (const [tierName, tierModel] of Object.entries(agentConfig.tiers)) {
+        if (tierModel) {
+          agentEntry.model_tiers[tierName] = { model: tierModel };
+        }
+      }
+    }
+
+    agentBlock[agentName] = agentEntry;
+  }
 
   return {
-    "paiVersion": "2.4-opencode",
-    "env": {
-      "PAI_DIR": OPENCODE_DIR,
-      "OPENCODE_MAX_OUTPUT_TOKENS": "80000",
-      "BASH_DEFAULT_TIMEOUT_MS": "600000"
-    },
-    "contextFiles": [
-      "skills/PAI/SKILL.md",
-      "skills/PAI/SYSTEM/AISTEERINGRULES.md",
-      "skills/PAI/USER/AISTEERINGRULES.md",
-      "skills/PAI/USER/DAIDENTITY.md"
-    ],
-    "daidentity": {
-      "name": config.AI_NAME,
-      "fullName": `${config.AI_NAME} - Personal AI`,
-      "displayName": config.AI_NAME,
-      "color": "#3B82F6",
-      "voiceId": VOICE_ID,
-      "voice": {
-        "stability": 0.35,
-        "similarity_boost": 0.80,
-        "style": 0.90,
-        "speed": 1.1,
-        "use_speaker_boost": true,
-        "volume": 0.8
-      },
-      "startupCatchphrase": config.CATCHPHRASE
-    },
-    "principal": {
-      "name": config.PRINCIPAL_NAME,
-      "timezone": config.TIMEZONE
-    },
-    "pai": {
-      "source": "github.com/Steffen025/pai-opencode",
-      "upstream": "github.com/danielmiessler/PAI",
-      "version": "2.4"
-    },
-    "techStack": {
-      "browser": "arc",
-      "terminal": "terminal",
-      "packageManager": "bun",
-      "language": "TypeScript"
-    },
-    "provider": {
-      "id": config.PROVIDER.id,
-      "name": config.PROVIDER.name,
-      "model": config.PROVIDER.defaultModel,
-      "profile": config.PROVIDER.id,
-      "multiResearch": config.MULTI_RESEARCH
-    }
+    $schema: 'https://opencode.ai/config.json',
+    theme: 'dark',
+    model: profile.default_model,
+    snapshot: true,
+    username: username,
+    agent: agentBlock,
   };
 }
 
-function generateDAIdentity(config: InstallConfig): string {
+function generateSettingsJson(config: PresetConfig): object {
+  return {
+    paiVersion: '2.5-opencode',
+    env: {
+      PAI_DIR: OPENCODE_DIR,
+      OPENCODE_MAX_OUTPUT_TOKENS: '80000',
+      BASH_DEFAULT_TIMEOUT_MS: '600000',
+    },
+    contextFiles: [
+      'skills/PAI/SKILL.md',
+      'skills/PAI/SYSTEM/AISTEERINGRULES.md',
+      'skills/PAI/USER/AISTEERINGRULES.md',
+      'skills/PAI/USER/DAIDENTITY.md',
+    ],
+    daidentity: {
+      name: config.AI_NAME,
+      fullName: `${config.AI_NAME} - Personal AI`,
+      displayName: config.AI_NAME,
+      color: '#3B82F6',
+      startupCatchphrase: config.CATCHPHRASE,
+    },
+    principal: {
+      name: config.PRINCIPAL_NAME,
+      timezone: config.TIMEZONE,
+    },
+    pai: {
+      source: 'github.com/Steffen025/pai-opencode',
+      upstream: 'github.com/danielmiessler/PAI',
+      version: '2.5',
+    },
+    techStack: {
+      browser: 'arc',
+      terminal: 'terminal',
+      packageManager: 'bun',
+      language: 'TypeScript',
+    },
+    provider: {
+      id: config.PRESET.id,
+      name: config.PRESET.name,
+      profile: config.PRESET.profile,
+    },
+  };
+}
+
+function generateDAIdentity(config: PresetConfig): string {
   return `# DA Identity & Interaction Rules
 
 **Personal content - DO NOT commit to public repositories.**
@@ -415,7 +545,7 @@ The DA should speak as itself, not about itself in third person.
 
 - **Name:** ${config.PRINCIPAL_NAME}
 - **Timezone:** ${config.TIMEZONE}
-- **Provider:** ${config.PROVIDER.name}
+- **Provider:** ${config.PRESET.name}
 
 ---
 
@@ -441,19 +571,131 @@ The DA should speak as itself, not about itself in third person.
 `;
 }
 
-function generateBasicInfo(config: InstallConfig): string {
+function generateBasicInfo(config: PresetConfig): string {
   return `# Basic Information
 
 - **Name:** ${config.PRINCIPAL_NAME}
 - **Timezone:** ${config.TIMEZONE}
-- **AI Provider:** ${config.PROVIDER.name}
-- **AI Model:** ${config.PROVIDER.defaultModel}
+- **AI Provider:** ${config.PRESET.name}
+- **AI Profile:** ${config.PRESET.profile}
 
 ---
 
 *Generated by PAI-OpenCode Wizard*
 *Update this file with your personal details*
 `;
+}
+
+function generateInternContextNote(): string {
+  return `# InternContext.md
+
+**NOTE:** This file is intentionally minimal.
+
+The Intern agent uses context files from other agents to understand PAI system behavior:
+- Agent personality definitions from PAI/Components/
+- Agent routing rules from PAI/SYSTEM/PAIAGENTSYSTEM.md
+- Core PAI principles from PAI/SKILL.md
+
+This file exists to satisfy the InternContext.md reference but contains no additional content, as the Intern agent's context is derived from shared PAI system files.
+
+---
+
+*Generated by PAI-OpenCode Wizard*
+`;
+}
+
+async function writeConfiguration(config: PresetConfig): Promise<boolean> {
+  print('');
+  print(`${c.bold}Step 5: Writing Configuration${c.reset}`);
+  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
+
+  // Load profile
+  const profile = loadProfile(config.PRESET.profile);
+  if (!profile) {
+    return false;
+  }
+
+  // Generate and write opencode.json
+  const opencodeJson = generateOpencodeJson(profile, config.PRINCIPAL_NAME);
+  writeFileSync(join(PROJECT_ROOT, 'opencode.json'), JSON.stringify(opencodeJson, null, 2));
+  printSuccess('Created opencode.json (project root)');
+
+  // Generate and write settings.json
+  const settingsJson = generateSettingsJson(config);
+  writeFileSync(join(OPENCODE_DIR, 'settings.json'), JSON.stringify(settingsJson, null, 2));
+  printSuccess('Created settings.json (.opencode/)');
+
+  // Ensure PAI/USER directory exists
+  const userDir = join(OPENCODE_DIR, 'skills', 'PAI', 'USER');
+  if (!existsSync(userDir)) {
+    mkdirSync(userDir, { recursive: true });
+  }
+
+  // Generate and write DAIDENTITY.md
+  const daIdentityPath = join(userDir, 'DAIDENTITY.md');
+  writeFileSync(daIdentityPath, generateDAIdentity(config));
+  printSuccess('Created DAIDENTITY.md');
+
+  // Generate and write BASICINFO.md
+  const basicInfoPath = join(userDir, 'BASICINFO.md');
+  writeFileSync(basicInfoPath, generateBasicInfo(config));
+  printSuccess('Created BASICINFO.md');
+
+  // Generate InternContext.md note
+  const internContextPath = join(userDir, 'InternContext.md');
+  writeFileSync(internContextPath, generateInternContextNote());
+  printSuccess('Created InternContext.md');
+
+  // Create required directories
+  const requiredDirs = [
+    'MEMORY',
+    'MEMORY/STATE',
+    'MEMORY/LEARNING',
+    'MEMORY/WORK',
+    'MEMORY/LEARNING/SIGNALS',
+  ];
+  for (const dir of requiredDirs) {
+    const dirPath = join(OPENCODE_DIR, dir);
+    if (!existsSync(dirPath)) {
+      mkdirSync(dirPath, { recursive: true });
+    }
+  }
+  printSuccess('Created MEMORY directories');
+
+  // Fix permissions
+  fixPermissions(OPENCODE_DIR);
+
+  return true;
+}
+
+// ============================================================================
+// PERMISSIONS
+// ============================================================================
+
+function fixPermissions(targetDir: string): void {
+  const info = userInfo();
+
+  print('');
+  print(`${c.bold}Fixing permissions for ${info.username}${c.reset}`);
+  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
+
+  try {
+    execSync(`chmod -R 755 "${targetDir}"`, { stdio: 'pipe' });
+    printSuccess('chmod -R 755 (make accessible)');
+
+    execSync(`chown -R ${info.uid}:${info.gid} "${targetDir}"`, { stdio: 'pipe' });
+    printSuccess(`chown -R to ${info.username}`);
+
+    // Make scripts executable
+    for (const pattern of ['*.ts', '*.sh']) {
+      try {
+        execSync(`find "${targetDir}" -name "${pattern}" -exec chmod 755 {} \\;`, { stdio: 'pipe' });
+      } catch (e) { /* ignore */ }
+    }
+    printSuccess('Set executable permissions on scripts');
+  } catch (err: any) {
+    printWarning(`Permission fix may need sudo: ${err.message}`);
+  }
 }
 
 // ============================================================================
@@ -464,7 +706,7 @@ function validate(): { passed: boolean; results: string[] } {
   const results: string[] = [];
   let passed = true;
 
-  // Check opencode.json (OpenCode's config - no custom fields allowed)
+  // Check opencode.json
   const opencodeJsonPath = join(PROJECT_ROOT, 'opencode.json');
   if (existsSync(opencodeJsonPath)) {
     try {
@@ -475,6 +717,10 @@ function validate(): { passed: boolean; results: string[] } {
         results.push(`${c.red}✗${c.reset} opencode.json missing model field`);
         passed = false;
       }
+      if (config.agent) {
+        const agentCount = Object.keys(config.agent).length;
+        results.push(`${c.green}✓${c.reset} Agent routing configured (${agentCount} agents)`);
+      }
     } catch (e) {
       results.push(`${c.red}✗${c.reset} opencode.json invalid JSON`);
       passed = false;
@@ -484,7 +730,7 @@ function validate(): { passed: boolean; results: string[] } {
     passed = false;
   }
 
-  // Check settings.json (PAI-OpenCode config - stores all custom fields)
+  // Check settings.json
   const settingsPath = join(OPENCODE_DIR, 'settings.json');
   if (existsSync(settingsPath)) {
     try {
@@ -529,199 +775,121 @@ function validate(): { passed: boolean; results: string[] } {
 // ============================================================================
 
 async function main(): Promise<void> {
+  // Show help if requested
+  if (process.argv.includes('--help') || process.argv.includes('-h')) {
+    print('');
+    print(`${c.blue}${c.bold}PAI-OpenCode Installation Wizard v2.0${c.reset}`);
+    print('');
+    print('  Interactive setup for Personal AI Infrastructure');
+    print('');
+    print(`${c.bold}Usage:${c.reset}`);
+    print('  bun run PAIOpenCodeWizard.ts           Run the interactive wizard');
+    print('  bun run PAIOpenCodeWizard.ts --help    Show this help message');
+    print('');
+    print(`${c.bold}What it does:${c.reset}`);
+    print('  1. Checks prerequisites (bun, go, git)');
+    print('  2. Builds OpenCode from development source');
+    print('  3. Guides you through 3 preset provider choices');
+    print('  4. Sets up your identity and AI assistant name');
+    print('  5. Generates configuration files with model_tiers support');
+    print('');
+    print(`${c.bold}Presets:${c.reset}`);
+    print('  A. Anthropic Max — Best quality, requires subscription');
+    print('  B. ZEN PAID — Budget-friendly, privacy-preserving');
+    print('  C. ZEN FREE — No cost, data may be used for improvement');
+    print('');
+    process.exit(0);
+  }
+
+  // Banner
   print('');
   print(`${c.blue}${c.bold}┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓${c.reset}`);
-  print(`${c.blue}${c.bold}┃${c.reset}           ${c.cyan}PAI-OpenCode Installation Wizard${c.reset}                  ${c.blue}${c.bold}┃${c.reset}`);
+  print(`${c.blue}${c.bold}┃${c.reset}        ${c.cyan}PAI-OpenCode Installation Wizard v2.0${c.reset}               ${c.blue}${c.bold}┃${c.reset}`);
   print(`${c.blue}${c.bold}┃${c.reset}      ${c.gray}Personal AI Infrastructure for OpenCode${c.reset}               ${c.blue}${c.bold}┃${c.reset}`);
-  print(`${c.blue}${c.bold}┃${c.reset}              ${c.magenta}Based on PAI v2.4${c.reset}                            ${c.blue}${c.bold}┃${c.reset}`);
   print(`${c.blue}${c.bold}┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛${c.reset}`);
 
-  // Step 1: Check Bun
-  if (!checkBun()) {
+  // Step 0: Prerequisites
+  const prereqs = checkPrerequisites();
+
+  if (!prereqs.bun || !prereqs.go || !prereqs.git) {
+    print('');
+    printError('Missing required prerequisites');
+    printInfo('Please install the missing tools and run the wizard again.');
     process.exit(1);
   }
 
-  // Step 2: Welcome
-  print('');
-  print(`${c.bold}Welcome to PAI-OpenCode Setup${c.reset}`);
-  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
-  print(`  PAI-OpenCode brings Daniel Miessler's Personal AI Infrastructure`);
-  print(`  to OpenCode - the provider-agnostic AI coding assistant.`);
-  print('');
-  print(`  This wizard will:`);
-  print(`    1. Configure your AI provider`);
-  print(`    2. Set up your identity`);
-  print(`    3. Create configuration files`);
-  print(`    4. Prepare for deep personalization (optional)`);
-  print('');
-
-  // Step 3: Provider Selection
-  print(`${c.bold}Step 1: Choose Your AI Provider${c.reset}`);
-  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
-
-  const providerChoices = PROVIDERS.map(p => `${p.name} - ${c.gray}${p.description}${c.reset}`);
-  const providerIdx = await promptChoice('Which AI provider will you use?', providerChoices, 0);
-  const selectedProvider = PROVIDERS[providerIdx];
-
-  printSuccess(`Selected: ${selectedProvider.name}`);
-
-  if (selectedProvider.authNote) {
-    print('');
-    print(`  ${c.bold}Authentication:${c.reset}`);
-    print(selectedProvider.authNote);
+  // Step 1: Build OpenCode
+  const buildSuccess = await buildOpenCode();
+  if (!buildSuccess) {
+    printWarning('OpenCode build had issues — you can still continue but may encounter errors');
   }
 
-  // Step 1b: Multi-Provider Research (optional)
-  print('');
-  print(`${c.bold}Step 1b: Research Agent Configuration${c.reset}`);
-  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
-  print(`  PAI includes specialized research agents (Gemini, Grok, Perplexity, etc.)`);
-  print(`  By default, they all use your primary provider (${c.cyan}${selectedProvider.name}${c.reset}).`);
-  print('');
-  print(`  With ${c.cyan}Multi-Provider Research${c.reset}, each researcher uses its native provider`);
-  print(`  for more diverse perspectives. This requires additional API keys.`);
-  print('');
+  // Step 2: Select preset
+  const preset = await selectPreset();
 
-  const researchChoice = await promptChoice(
-    'How should research agents work?',
-    [
-      `Single provider ${c.gray}- All researchers use ${selectedProvider.name} (simple, no extra keys)${c.reset}`,
-      `Multi-provider ${c.gray}- Each researcher uses its native model (needs extra API keys)${c.reset}`,
-    ],
-    0,
-  );
+  // Step 3: Identity
+  const { name, timezone } = await setupIdentity();
 
-  const MULTI_RESEARCH = researchChoice === 1;
+  // Step 4: AI Assistant
+  const { name: aiName, catchphrase } = await setupAIAssistant();
 
-  if (MULTI_RESEARCH) {
-    print('');
-    print(`  ${c.green}✓${c.reset} Multi-provider research enabled.`);
-    print(`  ${c.yellow}!${c.reset} Make sure these API keys are in ${c.cyan}~/.opencode/.env${c.reset}:`);
-    print(`    ${c.gray}GOOGLE_API_KEY${c.reset}       → GeminiResearcher    ${c.dim}(https://aistudio.google.com/apikey)${c.reset}`);
-    print(`    ${c.gray}XAI_API_KEY${c.reset}          → GrokResearcher      ${c.dim}(https://console.x.ai/)${c.reset}`);
-    print(`    ${c.gray}PERPLEXITY_API_KEY${c.reset}   → PerplexityResearcher${c.dim} (https://perplexity.ai/settings/api)${c.reset}`);
-    print(`    ${c.gray}OPENROUTER_API_KEY${c.reset}   → CodexResearcher     ${c.dim}(https://openrouter.ai/keys)${c.reset}`);
-    print('');
-    print(`  ${c.gray}Missing keys? No problem — those researchers fall back to ${selectedProvider.name}.${c.reset}`);
-  } else {
-    printSuccess(`All researchers will use ${selectedProvider.name}.`);
-    print(`  ${c.gray}You can enable multi-provider research later:${c.reset}`);
-    print(`  ${c.gray}bun run .opencode/tools/switch-provider.ts ${selectedProvider.id} --multi-research${c.reset}`);
-  }
-
-  // Step 2: Identity
-  print('');
-  print(`${c.bold}Step 2: Your Identity${c.reset}`);
-  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
-
-  const PRINCIPAL_NAME = await prompt('What is your name?', 'User');
-  const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  printInfo(`Detected timezone: ${detectedTimezone}`);
-  const TIMEZONE = await prompt('Timezone (press Enter to accept)', detectedTimezone);
-
-  // Step 5: AI Identity
-  print('');
-  print(`${c.bold}Step 3: Your AI Assistant${c.reset}`);
-  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
-
-  const AI_NAME = await prompt('Name your AI assistant', 'PAI');
-  const CATCHPHRASE = await prompt('Startup catchphrase', `${AI_NAME} here, ready to help.`);
-
-  // Voice deferred to v1.1
-  const VOICE_TYPE: 'male' | 'female' | 'neutral' = 'male';
-
-  const config: InstallConfig = {
-    PRINCIPAL_NAME,
-    TIMEZONE,
-    AI_NAME,
-    CATCHPHRASE,
-    PROVIDER: selectedProvider,
-    MULTI_RESEARCH: MULTI_RESEARCH,
-    VOICE_TYPE,
+  // Step 5: Write configuration
+  const config: PresetConfig = {
+    PRINCIPAL_NAME: name,
+    TIMEZONE: timezone,
+    AI_NAME: aiName,
+    CATCHPHRASE: catchphrase,
+    PRESET: preset,
   };
 
-  // Step 4: Write Configuration Files
-  print('');
-  print(`${c.bold}Step 4: Writing Configuration${c.reset}`);
-  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
-
-  // opencode.json (project root)
-  const opencodeJson = generateOpencodeJson(config);
-  writeFileSync(join(PROJECT_ROOT, 'opencode.json'), JSON.stringify(opencodeJson, null, 2));
-  printSuccess('Created opencode.json (project root)');
-
-  // settings.json (.opencode/)
-  const settingsJson = generateSettingsJson(config);
-  writeFileSync(join(OPENCODE_DIR, 'settings.json'), JSON.stringify(settingsJson, null, 2));
-  printSuccess('Created settings.json (.opencode/)');
-
-  // DAIDENTITY.md
-  const daIdentityPath = join(OPENCODE_DIR, 'skills', 'PAI', 'USER', 'DAIDENTITY.md');
-  writeFileSync(daIdentityPath, generateDAIdentity(config));
-  printSuccess('Created DAIDENTITY.md');
-
-  // BASICINFO.md
-  const basicInfoPath = join(OPENCODE_DIR, 'skills', 'PAI', 'USER', 'BASICINFO.md');
-  writeFileSync(basicInfoPath, generateBasicInfo(config));
-  printSuccess('Created BASICINFO.md');
-
-  // Create required directories
-  const requiredDirs = [
-    'MEMORY',
-    'MEMORY/STATE',
-    'MEMORY/LEARNING',
-    'MEMORY/WORK',
-  ];
-  for (const dir of requiredDirs) {
-    const dirPath = join(OPENCODE_DIR, dir);
-    if (!existsSync(dirPath)) {
-      mkdirSync(dirPath, { recursive: true });
-    }
+  const writeSuccess = await writeConfiguration(config);
+  if (!writeSuccess) {
+    print('');
+    printError('Configuration failed');
+    process.exit(1);
   }
-  printSuccess('Created MEMORY directories');
 
-  // Fix permissions
-  fixPermissions(OPENCODE_DIR);
-
-  // Step 8: Validate
+  // Step 6: Validate and show success
   print('');
   const { passed, results } = validate();
   print(`${c.bold}Validation${c.reset}`);
   print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
   for (const r of results) print(`  ${r}`);
 
-  // Step 9: Success Message
   print('');
   if (passed) {
     print(`${c.green}${c.bold}┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓${c.reset}`);
     print(`${c.green}${c.bold}┃${c.reset}              ${c.green}✓ PAI-OpenCode Installed!${c.reset}                      ${c.green}${c.bold}┃${c.reset}`);
     print(`${c.green}${c.bold}┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛${c.reset}`);
     print('');
-    print(`  ${c.cyan}Your AI:${c.reset}     ${AI_NAME}`);
-    print(`  ${c.cyan}Principal:${c.reset}   ${PRINCIPAL_NAME}`);
-    print(`  ${c.cyan}Provider:${c.reset}    ${selectedProvider.name}`);
-    print(`  ${c.cyan}Model:${c.reset}       ${selectedProvider.defaultModel}`);
-    print(`  ${c.cyan}Research:${c.reset}    ${MULTI_RESEARCH ? `${c.green}Multi-provider${c.reset}` : `Single provider`}`);
+    print(`  ${c.cyan}Your AI:${c.reset}     ${aiName}`);
+    print(`  ${c.cyan}Principal:${c.reset}   ${name}`);
+    print(`  ${c.cyan}Provider:${c.reset}    ${preset.name}`);
+    print(`  ${c.cyan}Profile:${c.reset}     ${preset.profile}`);
     print('');
     print(`${c.bold}Next Steps:${c.reset}`);
     print('');
     print(`  ${c.cyan}1.${c.reset} Start OpenCode in this directory:`);
     print(`     ${c.green}opencode${c.reset}`);
     print('');
-    print(`  ${c.cyan}2.${c.reset} ${c.bold}Deep Personalization (Recommended):${c.reset}`);
-    print(`     Once OpenCode starts, paste this prompt for full personalization:`);
+
+    if (preset.authType === 'oauth') {
+      print(`  ${c.cyan}2.${c.reset} Authenticate with your provider:`);
+      print(`     ${c.green}/connect${c.reset}`);
+      print('');
+    }
+
+    print(`  ${c.cyan}3.${c.reset} ${c.bold}Deep Personalization (Recommended):${c.reset}`);
+    print(`     Once OpenCode starts, run the onboarding wizard:`);
     print('');
     print(`     ${c.gray}┌──────────────────────────────────────────────────────────┐${c.reset}`);
     print(`     ${c.gray}│${c.reset} Let's do the onboarding. Guide me through setting up my ${c.gray}│${c.reset}`);
-    print(`     ${c.gray}│${c.reset} personal context - my name, my goals, my values, and    ${c.gray}│${c.reset}`);
-    print(`     ${c.gray}│${c.reset} how I want you to behave. Create the TELOS and identity ${c.gray}│${c.reset}`);
-    print(`     ${c.gray}│${c.reset} files that make this AI mine.                           ${c.gray}│${c.reset}`);
+    print(`     ${c.gray}│${c.reset} personal context — my goals, values, and how I want you   ${c.gray}│${c.reset}`);
+    print(`     ${c.gray}│${c.reset} to work with me.                                        ${c.gray}│${c.reset}`);
     print(`     ${c.gray}└──────────────────────────────────────────────────────────┘${c.reset}`);
     print('');
-    print(`     This 10-15 minute wizard will set up your complete TELOS framework:`);
-    print(`     • Mission, Goals, Challenges`);
-    print(`     • Values, Beliefs, Narratives`);
-    print(`     • Work style, Preferences`);
+    print(`     For advanced configuration, see:`);
+    print(`     ${c.cyan}.opencode/ADVANCED-SETUP.md${c.reset}`);
     print('');
   } else {
     print(`${c.red}${c.bold}✗ Installation has issues${c.reset}`);

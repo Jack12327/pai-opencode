@@ -346,7 +346,7 @@ This makes selection **visible** (you can see if wrong capabilities were picked)
 
 | Capability | Agent | When |
 |-----------|-------|------|
-| Research | GeminiResearcher, ClaudeResearcher, GrokResearcher | Investigation, exploration, information gathering |
+| Research | GeminiResearcher, DeepResearcher, GrokResearcher | Investigation, exploration, information gathering |
 | Engineer | Engineer (subagent_type=Engineer) | Building, implementing, coding, fixing |
 | Architect | Architect (subagent_type=Architect) | System design, architecture, structure decisions |
 | Analyst | Algorithm (subagent_type=Algorithm) | Analysis, review, evaluation, assessment |
@@ -363,7 +363,7 @@ Capabilities combine using named patterns:
 |---------|-------|---------|------|
 | **Pipeline** | A -> B -> C | Explore -> Architect -> Engineer | Sequential domain handoff |
 | **TDD Loop** | A <-> B | Engineer <-> QA | Build-verify cycle until ISC passes |
-| **Fan-out** | -> [A, B, C] | ClaudeResearcher + GeminiResearcher + GrokResearcher | Multiple perspectives needed |
+| **Fan-out** | -> [A, B, C] | DeepResearcher + GeminiResearcher + GrokResearcher | Multiple perspectives needed |
 | **Fan-in** | [A, B, C] -> D | Multiple researchers -> Spotcheck synthesis | Merging parallel results |
 | **Gate** | A -> check -> B or retry | Engineer -> QA -> Deploy or fix | Quality gate before progression |
 | **Escalation** | A(haiku) -> A(sonnet) -> A(opus) | Model upgrade on failure | Complexity exceeded model tier |

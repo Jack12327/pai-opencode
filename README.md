@@ -1,15 +1,15 @@
-![PAI-OpenCode Hero Banner](docs/images/hero-banner.png)
+![PAI-OpenCode Hero Banner](docs/images/hero-banner.jpg)
 
 # PAI-OpenCode
 
 **Personal AI Infrastructure for OpenCode** — Bring Daniel Miessler's renowned PAI scaffolding to any AI provider.
 
-[![Version](https://img.shields.io/badge/Version-1.2.1-brightgreen)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-1.3-brightgreen)](CHANGELOG.md)
 [![OpenCode Compatible](https://img.shields.io/badge/OpenCode-Compatible-green)](https://github.com/anomalyco/opencode)
 [![PAI Version](https://img.shields.io/badge/PAI-2.5-blue)](https://github.com/danielmiessler/Personal_AI_Infrastructure)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **v1.2.1 Release** — Provider Profile System + Multi-Provider Research. One-command provider switching with optional multi-provider research routing. See [CHANGELOG.md](CHANGELOG.md).
+> **v1.3 Release** — Three-Preset Provider System + Model Tiers. Choose your experience: Anthropic Max (best quality), ZEN PAID (budget-friendly), or ZEN FREE (try it out). See [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -17,7 +17,7 @@
 
 PAI-OpenCode is the complete port of **Daniel Miessler's Personal AI Infrastructure (PAI)** to **OpenCode** — an open-source, provider-agnostic AI coding assistant.
 
-![Architecture Overview](docs/images/architecture-overview.png)
+![Architecture Overview](docs/images/architecture-overview.jpg)
 
 **PAI** is a scaffolding system that makes AI assistants work better for *you*. It's not about which model you use — it's about the infrastructure around it:
 
@@ -68,8 +68,8 @@ opencode
 > **Already using OpenCode?** If you have an existing `~/.opencode` directory, see [Existing OpenCode Users](#existing-opencode-users) in the Installation Guide for symlink setup.
 
 The wizard will ask you to:
-- Choose your AI provider (8 options: Anthropic, OpenAI, Google, Groq, AWS Bedrock, Azure, ZEN free, Ollama)
-- **Configure research agents** — single provider or multi-provider for diverse perspectives
+- **Choose your preset** — Anthropic Max (recommended), ZEN PAID (budget-friendly), or ZEN FREE (try it out)
+- Configure research agents (optional)
 - Set your name and timezone
 - Name your AI assistant
 
@@ -103,7 +103,7 @@ This **10-15 minute** interactive session will configure your complete TELOS fra
 
 ## Features
 
-![Features Showcase](docs/images/features-showcase.png)
+![Features Showcase](docs/images/features-showcase.jpg)
 
 ### 🎯 Skills System (29 Skills)
 Modular, reusable capabilities invoked by name:
@@ -115,9 +115,25 @@ Modular, reusable capabilities invoked by name:
 
 ### 🤖 Agent Orchestration (16 Agents)
 Dynamic multi-agent composition with specialized roles:
-- **Agents Skill** — Create custom agents with personalities
-- **RedTeam** — 32-agent adversarial analysis
-- **Council** — 4-perspective decision-making
+
+| Agent | Purpose | Model Tier |
+|-------|---------|------------|
+| **Algorithm** | ISC criteria, verification, algorithm phases | Most Capable |
+| **Architect** | System design, architecture, implementation plans | Standard |
+| **Engineer** | Coding, implementation, bug fixes, refactoring | Standard |
+| **Intern** | Parallel grunt work, simple tasks | Budget |
+| **Explore** | Fast codebase exploration | Budget |
+| **Writer** | Content creation, docs, blog posts | Standard |
+| **DeepResearcher** | Default web research (Ava Sterling) | Standard |
+| **GeminiResearcher** | Multi-perspective analysis | Standard |
+| **PerplexityResearcher** | Real-time news, breaking events | Standard |
+| **GrokResearcher** | Contrarian analysis, X data | Standard |
+| **CodexResearcher** | Code-focused research | Standard |
+| **QATester** | Testing, verification, browser validation | Standard |
+| **Pentester** | Security testing, vulnerability assessment | Standard |
+| **Designer** | UX/UI design, shadcn/ui | Standard |
+| **Artist** | Visual content, prompt engineering | Standard |
+| **General** | General-purpose multi-step tasks | Standard |
 
 ### 🧠 Memory & Learning
 Persistent context across sessions:
@@ -146,19 +162,63 @@ Use any AI provider:
 
 ---
 
+## Provider Preset System
+
+PAI-OpenCode offers **three simple presets** — choose the experience you want:
+
+| Preset | Best For | Models | Cost |
+|--------|----------|--------|------|
+| **Anthropic Max** | Best quality, full PAI experience | Claude Opus 4.6 (orchestrator), Sonnet 4.5 (agents) | ~$75/1M output tokens |
+| **ZEN PAID** | Budget-friendly quality | GLM 4.7, Kimi K2.5, Gemini Flash (paid tier, no training) | ~$1-15/1M output tokens |
+| **ZEN FREE** | Trying it out | Free tier models (may train on data) | **FREE** |
+
+### Why This Design?
+
+The goal is **simplicity with power**:
+- **3 choices**, not 8+ providers to evaluate
+- **Model tiers** built-in (quick/standard/advanced)
+- **Anthropic Max** for those who want the best
+- **ZEN** for budget-conscious users
+- **Easy to customize** later via [ADVANCED-SETUP.md](docs/ADVANCED-SETUP.md)
+
+### Switching Presets
+
+```bash
+# Re-run the wizard to change preset
+bun run .opencode/PAIOpenCodeWizard.ts
+```
+
+---
+
+## Model Tiers
+
+Each preset uses a **3-tier model strategy** to optimize cost vs. quality:
+
+| Tier | Purpose | Use Case |
+|------|---------|----------|
+| **Quick** | Fast, cheap tasks | Batch edits, simple replacements, file search |
+| **Standard** | Most work | Feature implementation, research, bug fixes |
+| **Advanced** | Complex reasoning | Edge cases, architecture decisions, debugging |
+
+The orchestrator automatically selects the right tier based on task complexity via the `model_tier` parameter in Task tool calls, configured in `opencode.json`.
+
+> **Note:** Model tiers are configured in `opencode.json` per agent. The orchestrator decides which tier to use based on task requirements, not CLI flags.
+
+---
+
 ## Cost-Aware Research System
 
 PAI-OpenCode includes a **3-tier research system** that optimizes for both quality and cost:
 
 | Tier | Workflow | Agents | Cost | Trigger |
 |------|----------|--------|------|---------|
-| **Quick** (DEFAULT) | `QuickResearch` | 1 Claude | **$0 FREE** | "research X" |
+| **Quick** (DEFAULT) | `QuickResearch` | 1 agent | **$0 FREE** | "research X" |
 | **Standard** | `StandardResearch` | 3 (Claude + Gemini + Perplexity) | ~$0.01 | "standard research" |
 | **Extensive** | `ExtensiveResearch` | 4-5 providers | ~$0.10-0.50 | "extensive research" |
 
 ### Why This Matters
 
-**Quick Research is FREE** — ClaudeResearcher uses Claude WebSearch, which is included in your Anthropic subscription. No API keys needed, no extra cost.
+**Quick Research is FREE** — Uses free tier or cached results. No API keys needed for basic queries.
 
 **Standard Research** adds multi-perspective coverage with Gemini and Perplexity for ~$0.01 per query.
 
@@ -168,20 +228,19 @@ PAI-OpenCode includes a **3-tier research system** that optimizes for both quali
 
 | Agent | Model | Specialty | Cost |
 |-------|-------|-----------|------|
-| `ClaudeResearcher` | claude-sonnet-4-5 | Academic depth, scholarly synthesis | Included in subscription |
-| `GeminiResearcher` | google/gemini-2.5-flash | Multi-perspective analysis | ~$0.002 |
-| `GrokResearcher` | xai/grok-4-1-fast | Contrarian, social media, X access | ~$0.01 |
-| `PerplexityResearcher` | perplexity/sonar | Real-time news, breaking events | ~$0.01 |
-| `PerplexityProResearcher` | perplexity/sonar-pro | Deep investigation, extensive | ~$0.05 |
-| `CodexResearcher` | openrouter/openai/gpt-4.1 | Technical, TypeScript-focused | ~$0.03 |
+| `DeepResearcher` | Configured in `opencode.json` | Academic depth, scholarly synthesis | Free/Paid |
+| `GeminiResearcher` | Gemini 2.5 Flash | Multi-perspective analysis | ~$0.002 |
+| `GrokResearcher` | xAI Grok 4.1 Fast | Contrarian, social media, X access | ~$0.01 |
+| `PerplexityResearcher` | Perplexity Sonar | Real-time news, breaking events | ~$0.01 |
+| `CodexResearcher` | GPT-4.1 / GPT-5.1 | Technical, TypeScript-focused | ~$0.03 |
 
 ### Setup
 
 **Option 1: Wizard** — The installation wizard asks about research configuration during setup.
 
-**Option 2: CLI** — Switch to multi-provider research anytime:
+**Option 2: CLI** — Add research agents anytime:
 ```bash
-bun run .opencode/tools/switch-provider.ts anthropic --multi-research
+bun run .opencode/tools/switch-provider.ts --add-researchers
 ```
 
 **Required API keys** (add to `~/.opencode/.env`):
@@ -193,44 +252,6 @@ bun run .opencode/tools/switch-provider.ts anthropic --multi-research
 | `OPENROUTER_API_KEY` | CodexResearcher | https://openrouter.ai/keys |
 
 Missing a key? No problem — that researcher falls back to your primary provider.
-
----
-
-## Provider Profile System
-
-PAI-OpenCode includes a **one-command provider switching** system. Switch all 18 agent models at once:
-
-```bash
-# Switch all agents to a different provider
-bun run .opencode/tools/switch-provider.ts anthropic     # Claude (recommended)
-bun run .opencode/tools/switch-provider.ts openai        # GPT-4.1 / GPT-5.1
-bun run .opencode/tools/switch-provider.ts google        # Gemini 2.5
-bun run .opencode/tools/switch-provider.ts zen           # Free tier (no API key)
-bun run .opencode/tools/switch-provider.ts local         # Ollama (offline)
-```
-
-Each profile uses a **3-tier model strategy**:
-
-| Tier | Purpose | Anthropic | OpenAI | Google |
-|------|---------|-----------|--------|--------|
-| **Most Capable** | Algorithm (orchestration) | claude-opus-4-6 | gpt-5.1 | gemini-2.5-pro |
-| **Standard** | Most agents (coding, research) | claude-sonnet-4-5 | gpt-4.1 | gemini-2.5-flash |
-| **Budget** | explore, Intern (fast tasks) | claude-haiku-4-5 | gpt-4.1-mini | gemini-2.0-flash-lite |
-
-### Multi-Provider Research
-
-For richer research with diverse perspectives, enable multi-provider routing:
-
-```bash
-bun run .opencode/tools/switch-provider.ts anthropic --multi-research
-```
-
-This routes each research agent to its native provider while keeping all other agents on your primary provider. Requires additional API keys in `~/.opencode/.env`.
-
-Check your setup status:
-```bash
-bun run .opencode/tools/switch-provider.ts --researchers
-```
 
 ---
 

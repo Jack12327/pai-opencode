@@ -25,7 +25,7 @@ Use the Task tool with `run_in_background: true`:
 Task({
   description: "Research OpenAI news",
   prompt: "Research the latest OpenAI developments...",
-  subagent_type: "PerplexityResearcher",  // or Intern, ClaudeResearcher, etc.
+  subagent_type: "PerplexityResearcher",  // or Intern, DeepResearcher, etc.
   model: "haiku",  // Use haiku for parallel grunt work
   run_in_background: true
 })

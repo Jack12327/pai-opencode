@@ -25,55 +25,192 @@
       "model": "anthropic/claude-opus-4-6"
     },
     "Architect": {
-      "model": "anthropic/claude-sonnet-4-5"
+      "model": "anthropic/claude-sonnet-4-5",
+      "model_tiers": {
+        "quick": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "standard": {
+          "model": "anthropic/claude-sonnet-4-5"
+        },
+        "advanced": {
+          "model": "anthropic/claude-opus-4-6"
+        }
+      }
     },
     "Engineer": {
-      "model": "anthropic/claude-sonnet-4-5"
+      "model": "anthropic/claude-sonnet-4-5",
+      "model_tiers": {
+        "quick": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "standard": {
+          "model": "anthropic/claude-sonnet-4-5"
+        },
+        "advanced": {
+          "model": "anthropic/claude-opus-4-6"
+        }
+      }
     },
     "general": {
-      "model": "anthropic/claude-sonnet-4-5"
+      "model": "anthropic/claude-sonnet-4-5",
+      "model_tiers": {
+        "quick": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "standard": {
+          "model": "anthropic/claude-sonnet-4-5"
+        },
+        "advanced": {
+          "model": "anthropic/claude-opus-4-6"
+        }
+      }
     },
     "explore": {
       "model": "anthropic/claude-haiku-4-5"
     },
     "Intern": {
-      "model": "anthropic/claude-haiku-4-5"
+      "model": "anthropic/claude-haiku-4-5",
+      "model_tiers": {
+        "quick": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "standard": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "advanced": {
+          "model": "anthropic/claude-sonnet-4-5"
+        }
+      }
     },
-    "writer": {
-      "model": "anthropic/claude-sonnet-4-5"
+    "Writer": {
+      "model": "anthropic/claude-sonnet-4-5",
+      "model_tiers": {
+        "quick": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "standard": {
+          "model": "anthropic/claude-sonnet-4-5"
+        },
+        "advanced": {
+          "model": "anthropic/claude-opus-4-6"
+        }
+      }
     },
-    "ClaudeResearcher": {
-      "model": "anthropic/claude-sonnet-4-5"
+    "DeepResearcher": {
+      "model": "anthropic/claude-sonnet-4-5",
+      "model_tiers": {
+        "quick": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "standard": {
+          "model": "anthropic/claude-sonnet-4-5"
+        },
+        "advanced": {
+          "model": "anthropic/claude-opus-4-6"
+        }
+      }
     },
     "GeminiResearcher": {
-      "model": "anthropic/claude-sonnet-4-5"
+      "model": "google/gemini-2.5-flash",
+      "model_tiers": {
+        "quick": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "standard": {
+          "model": "anthropic/claude-sonnet-4-5"
+        },
+        "advanced": {
+          "model": "anthropic/claude-opus-4-6"
+        }
+      }
     },
     "GrokResearcher": {
-      "model": "anthropic/claude-sonnet-4-5"
+      "model": "xai/grok-4-1-fast",
+      "model_tiers": {
+        "quick": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "standard": {
+          "model": "anthropic/claude-sonnet-4-5"
+        },
+        "advanced": {
+          "model": "anthropic/claude-opus-4-6"
+        }
+      }
     },
     "PerplexityResearcher": {
-      "model": "anthropic/claude-sonnet-4-5"
+      "model": "perplexity/sonar",
+      "model_tiers": {
+        "quick": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "standard": {
+          "model": "anthropic/claude-sonnet-4-5"
+        },
+        "advanced": {
+          "model": "anthropic/claude-opus-4-6"
+        }
+      }
     },
-    "PerplexityProResearcher": {
-      "model": "anthropic/claude-sonnet-4-5"
+    "CodexResearcher": {
+      "model": "anthropic/claude-sonnet-4-5",
+      "model_tiers": {
+        "quick": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "standard": {
+          "model": "anthropic/claude-sonnet-4-5"
+        },
+        "advanced": {
+          "model": "anthropic/claude-opus-4-6"
+        }
+      }
     },
     "QATester": {
       "model": "anthropic/claude-sonnet-4-5"
     },
     "Pentester": {
-      "model": "anthropic/claude-sonnet-4-5"
+      "model": "anthropic/claude-sonnet-4-5",
+      "model_tiers": {
+        "quick": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "standard": {
+          "model": "anthropic/claude-sonnet-4-5"
+        },
+        "advanced": {
+          "model": "anthropic/claude-opus-4-6"
+        }
+      }
     },
     "Designer": {
-      "model": "anthropic/claude-sonnet-4-5"
+      "model": "anthropic/claude-sonnet-4-5",
+      "model_tiers": {
+        "quick": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "standard": {
+          "model": "anthropic/claude-sonnet-4-5"
+        },
+        "advanced": {
+          "model": "anthropic/claude-opus-4-6"
+        }
+      }
     },
     "Artist": {
-      "model": "anthropic/claude-sonnet-4-5"
-    },
-    "CodexResearcher": {
-      "model": "anthropic/claude-sonnet-4-5"
-    },
-    "researcher": {
-      "model": "anthropic/claude-sonnet-4-5"
+      "model": "anthropic/claude-sonnet-4-5",
+      "model_tiers": {
+        "quick": {
+          "model": "anthropic/claude-haiku-4-5"
+        },
+        "standard": {
+          "model": "anthropic/claude-sonnet-4-5"
+        },
+        "advanced": {
+          "model": "anthropic/claude-opus-4-6"
+        }
+      }
     }
   }
 }

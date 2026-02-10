@@ -68,7 +68,7 @@ This is the main investigation step. Deploy 9+ agents across 3 categories simult
 
 #### CATEGORY 1: People Search Aggregators (3 agents minimum)
 
-**Agent 1: ClaudeResearcher - Primary Name Search**
+**Agent 1: DeepResearcher - Primary Name Search**
 ```
 Prompt: Search for [FULL NAME] with these exact spelling variations: [list all].
 Location: [CITY, STATE]. Age approximately [AGE].
@@ -76,7 +76,7 @@ Search TruePeopleSearch, FastPeopleSearch, Spokeo concepts.
 Return: current address, phone, relatives, associates, email.
 ```
 
-**Agent 2: ClaudeResearcher - Comprehensive Search**
+**Agent 2: DeepResearcher - Comprehensive Search**
 ```
 Prompt: Comprehensive people search for [NAME] from [LOCATION].
 Try phonetic and ethnic spelling variations of the surname.
@@ -96,7 +96,7 @@ Return any matches with spelling variations that worked.
 
 #### CATEGORY 2: Social Media Search (3 agents minimum)
 
-**Agent 4: ClaudeResearcher - LinkedIn/Facebook**
+**Agent 4: DeepResearcher - LinkedIn/Facebook**
 ```
 Prompt: Search LinkedIn and Facebook for [NAME] from [LOCATION].
 Use Google x-ray: site:linkedin.com/in "[NAME]" "[LOCATION]"
@@ -124,7 +124,7 @@ Cross-reference any found usernames across platforms.
 
 #### CATEGORY 3: Public Records & News (3 agents minimum)
 
-**Agent 7: ClaudeResearcher - Property/Voter Records**
+**Agent 7: DeepResearcher - Property/Voter Records**
 ```
 Prompt: Search California public records for [NAME].
 Focus on: Alameda County property records, CA voter registration.
@@ -139,7 +139,7 @@ Check: CA Secretary of State business search, court records.
 Look for any legal filings, business registrations, professional licenses.
 ```
 
-**Agent 9: ClaudeResearcher - News & Mentions**
+**Agent 9: DeepResearcher - News & Mentions**
 ```
 Prompt: Search for news articles, obituaries, or public mentions of [NAME].
 Check: local Newark/Fremont news archives, alumni mentions.

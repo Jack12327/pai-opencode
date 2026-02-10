@@ -17,7 +17,7 @@
 # TO ENABLE: Add the API keys to ~/.opencode/.env:
 #   GOOGLE_API_KEY=your_key        # For GeminiResearcher
 #   XAI_API_KEY=your_key           # For GrokResearcher
-#   PERPLEXITY_API_KEY=your_key    # For PerplexityResearcher + PerplexityProResearcher
+#   PERPLEXITY_API_KEY=your_key    # For PerplexityResearcher
 #   OPENROUTER_API_KEY=your_key    # For CodexResearcher
 #
 # TO DISABLE: Set enabled: false below, or simply don't add the API keys.
@@ -42,12 +42,6 @@ researchers:
     native_model: perplexity/sonar
     api_key_env: PERPLEXITY_API_KEY
     description: "Perplexity Sonar - real-time web search"
-    get_key_url: "https://www.perplexity.ai/settings/api"
-
-  PerplexityProResearcher:
-    native_model: perplexity/sonar-pro
-    api_key_env: PERPLEXITY_API_KEY
-    description: "Perplexity Sonar Pro - deep investigative research"
     get_key_url: "https://www.perplexity.ai/settings/api"
 
   CodexResearcher:

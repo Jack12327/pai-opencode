@@ -92,10 +92,10 @@ Running the **CompanyLookup** workflow in the **OSINT** skill to research compan
 Task({ subagent_type: "PerplexityResearcher", prompt: "Verify business registrations for [company]" })
 
 // Leadership (Claude)
-Task({ subagent_type: "ClaudeResearcher", prompt: "Research founder and executive backgrounds for [company]" })
+Task({ subagent_type: "DeepResearcher", prompt: "Research founder and executive backgrounds for [company]" })
 
 // Financial Intelligence (Claude)
-Task({ subagent_type: "ClaudeResearcher", prompt: "Research funding history and financial health for [company]" })
+Task({ subagent_type: "DeepResearcher", prompt: "Research funding history and financial health for [company]" })
 
 // Legal/Regulatory (Grok)
 Task({ subagent_type: "GrokResearcher", prompt: "Search for legal issues and regulatory actions for [company]" })

@@ -19,26 +19,93 @@
 #
 name: local
 description: Local Ollama models - offline/private, customize to your installed models
-models:
-  default: ollama/qwen2.5-coder:7b
 
-  # 3-Tier: Most Capable → Standard → Budget
-  # CUSTOMIZE THESE to match your locally installed models!
-  Algorithm: ollama/qwen2.5-coder:32b
-  Architect: ollama/qwen2.5-coder:7b
-  Engineer: ollama/qwen2.5-coder:7b
-  general: ollama/qwen2.5-coder:7b
-  explore: ollama/qwen2.5-coder:1.5b
-  Intern: ollama/qwen2.5-coder:1.5b
-  writer: ollama/qwen2.5-coder:7b
-  ClaudeResearcher: ollama/qwen2.5-coder:7b
-  GeminiResearcher: ollama/qwen2.5-coder:7b
-  GrokResearcher: ollama/qwen2.5-coder:7b
-  PerplexityResearcher: ollama/qwen2.5-coder:7b
-  PerplexityProResearcher: ollama/qwen2.5-coder:7b
-  QATester: ollama/qwen2.5-coder:7b
-  Pentester: ollama/qwen2.5-coder:7b
-  Designer: ollama/qwen2.5-coder:7b
-  Artist: ollama/qwen2.5-coder:7b
-  CodexResearcher: ollama/qwen2.5-coder:7b
-  researcher: ollama/qwen2.5-coder:7b
+# Default model for the main opencode.json "model" field
+default_model: ollama/qwen2.5-coder:7b
+
+# Agent routing with model tiers (CUSTOMIZE THESE!)
+agents:
+  Algorithm:
+    model: ollama/qwen2.5-coder:32b
+  Architect:
+    model: ollama/qwen2.5-coder:7b
+    tiers:
+      quick: ollama/qwen2.5-coder:1.5b
+      standard: ollama/qwen2.5-coder:7b
+      advanced: ollama/qwen2.5-coder:32b
+  Engineer:
+    model: ollama/qwen2.5-coder:7b
+    tiers:
+      quick: ollama/qwen2.5-coder:1.5b
+      standard: ollama/qwen2.5-coder:7b
+      advanced: ollama/qwen2.5-coder:32b
+  general:
+    model: ollama/qwen2.5-coder:7b
+    tiers:
+      quick: ollama/qwen2.5-coder:1.5b
+      standard: ollama/qwen2.5-coder:7b
+      advanced: ollama/qwen2.5-coder:32b
+  explore:
+    model: ollama/qwen2.5-coder:1.5b
+  Intern:
+    model: ollama/qwen2.5-coder:1.5b
+    tiers:
+      quick: ollama/qwen2.5-coder:1.5b
+      standard: ollama/qwen2.5-coder:1.5b
+      advanced: ollama/qwen2.5-coder:7b
+  Writer:
+    model: ollama/qwen2.5-coder:7b
+    tiers:
+      quick: ollama/qwen2.5-coder:1.5b
+      standard: ollama/qwen2.5-coder:7b
+      advanced: ollama/qwen2.5-coder:32b
+  DeepResearcher:
+    model: ollama/qwen2.5-coder:7b
+    tiers:
+      quick: ollama/qwen2.5-coder:1.5b
+      standard: ollama/qwen2.5-coder:7b
+      advanced: ollama/qwen2.5-coder:32b
+  GeminiResearcher:
+    model: ollama/qwen2.5-coder:7b
+    tiers:
+      quick: ollama/qwen2.5-coder:1.5b
+      standard: ollama/qwen2.5-coder:7b
+      advanced: ollama/qwen2.5-coder:32b
+  GrokResearcher:
+    model: ollama/qwen2.5-coder:7b
+    tiers:
+      quick: ollama/qwen2.5-coder:1.5b
+      standard: ollama/qwen2.5-coder:7b
+      advanced: ollama/qwen2.5-coder:32b
+  PerplexityResearcher:
+    model: ollama/qwen2.5-coder:7b
+    tiers:
+      quick: ollama/qwen2.5-coder:1.5b
+      standard: ollama/qwen2.5-coder:7b
+      advanced: ollama/qwen2.5-coder:32b
+  CodexResearcher:
+    model: ollama/qwen2.5-coder:7b
+    tiers:
+      quick: ollama/qwen2.5-coder:1.5b
+      standard: ollama/qwen2.5-coder:7b
+      advanced: ollama/qwen2.5-coder:32b
+  QATester:
+    model: ollama/qwen2.5-coder:7b
+  Pentester:
+    model: ollama/qwen2.5-coder:7b
+    tiers:
+      quick: ollama/qwen2.5-coder:1.5b
+      standard: ollama/qwen2.5-coder:7b
+      advanced: ollama/qwen2.5-coder:32b
+  Designer:
+    model: ollama/qwen2.5-coder:7b
+    tiers:
+      quick: ollama/qwen2.5-coder:1.5b
+      standard: ollama/qwen2.5-coder:7b
+      advanced: ollama/qwen2.5-coder:32b
+  Artist:
+    model: ollama/qwen2.5-coder:7b
+    tiers:
+      quick: ollama/qwen2.5-coder:1.5b
+      standard: ollama/qwen2.5-coder:7b
+      advanced: ollama/qwen2.5-coder:32b

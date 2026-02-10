@@ -1,35 +1,100 @@
 # Anthropic Claude - Recommended for best PAI experience
 # 3-Tier: Opus (deep reasoning) → Sonnet (standard) → Haiku (speed)
 #
-# Requires: ANTHROPIC_API_KEY in ~/.opencode/.env
-#
-# Available models (Feb 2026):
-#   anthropic/claude-opus-4-6    - Most capable, deep reasoning (expensive)
-#   anthropic/claude-sonnet-4-5  - Balanced standard tier (recommended default)
-#   anthropic/claude-haiku-4-5   - Fast budget tier
+# Requires: Anthropic Max subscription or ANTHROPIC_API_KEY
 #
 name: anthropic
 description: Anthropic Claude models - recommended for best quality
-models:
-  # Main model (opencode.json "model" field)
-  default: anthropic/claude-sonnet-4-5
 
-  # 3-Tier: Most Capable → Standard → Budget
-  Algorithm: anthropic/claude-opus-4-6
-  Architect: anthropic/claude-sonnet-4-5
-  Engineer: anthropic/claude-sonnet-4-5
-  general: anthropic/claude-sonnet-4-5
-  explore: anthropic/claude-haiku-4-5
-  Intern: anthropic/claude-haiku-4-5
-  writer: anthropic/claude-sonnet-4-5
-  ClaudeResearcher: anthropic/claude-sonnet-4-5
-  GeminiResearcher: anthropic/claude-sonnet-4-5
-  GrokResearcher: anthropic/claude-sonnet-4-5
-  PerplexityResearcher: anthropic/claude-sonnet-4-5
-  PerplexityProResearcher: anthropic/claude-sonnet-4-5
-  QATester: anthropic/claude-sonnet-4-5
-  Pentester: anthropic/claude-sonnet-4-5
-  Designer: anthropic/claude-sonnet-4-5
-  Artist: anthropic/claude-sonnet-4-5
-  CodexResearcher: anthropic/claude-sonnet-4-5
-  researcher: anthropic/claude-sonnet-4-5
+# Default model for the main opencode.json "model" field
+default_model: anthropic/claude-sonnet-4-5
+
+# Agent routing with model tiers
+agents:
+  Algorithm:
+    model: anthropic/claude-opus-4-6
+    # No tiers — Algorithm always uses Opus
+  Architect:
+    model: anthropic/claude-sonnet-4-5
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-sonnet-4-5
+      advanced: anthropic/claude-opus-4-6
+  Engineer:
+    model: anthropic/claude-sonnet-4-5
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-sonnet-4-5
+      advanced: anthropic/claude-opus-4-6
+  general:
+    model: anthropic/claude-sonnet-4-5
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-sonnet-4-5
+      advanced: anthropic/claude-opus-4-6
+  explore:
+    model: anthropic/claude-haiku-4-5
+    # No tiers — explore is always fast/cheap
+  Intern:
+    model: anthropic/claude-haiku-4-5
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-haiku-4-5
+      advanced: anthropic/claude-sonnet-4-5
+  Writer:
+    model: anthropic/claude-sonnet-4-5
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-sonnet-4-5
+      advanced: anthropic/claude-opus-4-6
+  DeepResearcher:
+    model: anthropic/claude-sonnet-4-5
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-sonnet-4-5
+      advanced: anthropic/claude-opus-4-6
+  GeminiResearcher:
+    model: anthropic/claude-sonnet-4-5
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-sonnet-4-5
+      advanced: anthropic/claude-opus-4-6
+  GrokResearcher:
+    model: anthropic/claude-sonnet-4-5
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-sonnet-4-5
+      advanced: anthropic/claude-opus-4-6
+  PerplexityResearcher:
+    model: anthropic/claude-sonnet-4-5
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-sonnet-4-5
+      advanced: anthropic/claude-opus-4-6
+  CodexResearcher:
+    model: anthropic/claude-sonnet-4-5
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-sonnet-4-5
+      advanced: anthropic/claude-opus-4-6
+  QATester:
+    model: anthropic/claude-sonnet-4-5
+    # No tiers — QATester uses standard
+  Pentester:
+    model: anthropic/claude-sonnet-4-5
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-sonnet-4-5
+      advanced: anthropic/claude-opus-4-6
+  Designer:
+    model: anthropic/claude-sonnet-4-5
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-sonnet-4-5
+      advanced: anthropic/claude-opus-4-6
+  Artist:
+    model: anthropic/claude-sonnet-4-5
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-sonnet-4-5
+      advanced: anthropic/claude-opus-4-6

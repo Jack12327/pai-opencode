@@ -7,7 +7,7 @@
 First, ensure the observability server is running:
 
 ```bash
-cd /Users/steffen/workspace/github.com/Steffen025/pai-opencode/.opencode/observability-server
+cd ~/.opencode/observability-server
 bun run server.ts
 ```
 
@@ -18,7 +18,7 @@ The server should be running on `http://localhost:8889`
 In a new terminal:
 
 ```bash
-cd /Users/steffen/workspace/github.com/Steffen025/pai-opencode/.opencode/observability-server/dashboard
+cd ~/.opencode/observability-server/dashboard
 bun run dev
 ```
 

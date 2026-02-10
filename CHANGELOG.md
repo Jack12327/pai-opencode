@@ -7,6 +7,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## v1.3.0 — Multi-Provider Agent System with Model Tiers (2026-02-10)
+
+### 🚀 Major: True Multi-Provider Agent System
+
+**The agent system has been completely overhauled for cost-efficient, provider-flexible operation.**
+
+#### Agent System Changes
+- **Model routing centralized** — Agent `.md` files no longer contain `model:` in frontmatter. ALL model routing now lives exclusively in `opencode.json`
+- **16 canonical agents** — Standardized agent roster (see list below)
+- **DeepResearcher** replaces ClaudeResearcher (provider-agnostic naming)
+- **Removed** PerplexityProResearcher (redundant), researcher (lowercase duplicate)
+
+**Migration Notes:**
+- ⚠️ **If you have custom workflows referencing `ClaudeResearcher`**, update them to `DeepResearcher`
+- ⚠️ **If you have custom skills referencing `PerplexityProResearcher`**, migrate to `PerplexityResearcher` with `model_tier: standard` (Sonar Pro). Use `model_tier: advanced` only for Sonar Deep Research.
+
+#### Model Tiers
+- **Three-tier model routing** — `quick`, `standard`, `advanced` tiers per agent in `opencode.json`
+- Orchestrator selects tier based on task complexity via `model_tier` parameter
+- Backward-compatible: `model` field still works as fallback for OpenCode stable
+
+#### 3-Preset Wizard (v2.0)
+- **Simplified to 3 presets:** Anthropic Max, ZEN PAID, ZEN FREE
+- **OpenCode dev build** — Wizard now builds OpenCode from source (required for model tier support)
+- Prerequisites check: git, go, bun
+- Removed: Google, Groq, AWS Bedrock, Azure as separate wizard options
+
+#### Provider Profiles (v3.0)
+- **New YAML format** with `default_model` + `agents` structure including `tiers`
+- **New profile:** `zen-paid.yaml` for privacy-preserving pay-as-you-go models
+- **Renamed:** `zen.yaml` is now ZEN FREE (community/free models)
+- **Removed:** `google.yaml` (use manual config via [ADVANCED-SETUP.md](docs/ADVANCED-SETUP.md))
+- **switch-provider.ts v3.0** — Updated for new profile format with model_tiers generation
+
+#### Documentation
+- **NEW:** `ADVANCED-SETUP.md` — Guide for multi-provider research, custom models, and manual configuration
+- **Updated:** PAIAGENTSYSTEM.md with model tier guide and sanitized agent roster
+- **Updated:** README.md and INSTALL.md for new 3-preset system
+
+### Breaking Changes
+- Profile YAML format changed (`models:` → `default_model:` + `agents:` with `tiers`)
+- `ClaudeResearcher` renamed to `DeepResearcher` (update any custom workflows)
+- `PerplexityProResearcher` removed (use `PerplexityResearcher` with `standard` tier for Sonar Pro)
+- Agent `.md` files no longer accept `model:` field — use `opencode.json` exclusively
+- Google profile removed — configure manually if needed
+
+#### Profile Format Change (Before → After)
+
+**Old format (v1.2.x):**
+```yaml
+models:
+  - model: anthropic/claude-opus-4-6
+    agents: [Algorithm]
+  - model: anthropic/claude-sonnet-4-5
+    agents: [Architect, Engineer, Writer]
+```
+
+**New format (v1.3.0):**
+```yaml
+default_model: anthropic/claude-sonnet-4-5
+agents:
+  Algorithm:
+    model: anthropic/claude-opus-4-6
+    tiers:
+      quick: anthropic/claude-haiku-4-5
+      standard: anthropic/claude-sonnet-4-5
+      advanced: anthropic/claude-opus-4-6
+```
+
+#### All 16 Canonical Agents
+
+| Agent | Type | Default Tier |
+|-------|------|--------------|
+| **Algorithm** | Orchestrator | Most Capable |
+| **Architect** | Design | Standard |
+| **Engineer** | Implementation | Standard |
+| **general** | Multi-step | Standard |
+| **explore** | Exploration | Budget |
+| **Intern** | Parallel work | Budget |
+| **Writer** | Content | Standard |
+| **DeepResearcher** | Research | Standard |
+| **GeminiResearcher** | Research | Standard |
+| **GrokResearcher** | Research | Standard |
+| **PerplexityResearcher** | Research | Standard |
+| **CodexResearcher** | Research | Standard |
+| **QATester** | Testing | Standard |
+| **Pentester** | Security | Standard |
+| **Designer** | UX/UI | Standard |
+| **Artist** | Visual | Standard |
+
+### Migration Guide
+1. Re-run the wizard: `bun run .opencode/PAIOpenCodeWizard.ts`
+2. Or switch profile manually: `bun run .opencode/tools/switch-provider.ts anthropic`
+3. Custom agent models → Edit `opencode.json` agent section directly
+
+---
+
 ## [1.2.1] - 2026-02-06
 
 ### Major Feature: Provider Profile System + Multi-Provider Research

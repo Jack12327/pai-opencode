@@ -18,7 +18,7 @@ Unlike tools locked to a single vendor, OpenCode supports **75+ AI providers** o
 **Why this matters for PAI:**
 PAI is model-agnostic. You can run the same skills, agents, and workflows on Claude Opus, GPT-4, or a local Llama model. OpenCode makes this seamless.
 
-![Provider Grid](images/provider-grid.png)
+![Provider Grid](images/provider-grid.jpg)
 
 ### Switching Providers
 
@@ -46,7 +46,7 @@ OpenCode pioneered **live session sharing**—multiple users can join the same A
 3. **Collaborators join** via browser, desktop, or terminal
 4. **Everyone sees the same context**, messages, and code changes live
 
-![Session Sharing](images/session-sharing-concept.png)
+![Session Sharing](images/session-sharing-concept.jpg)
 
 ### Use Cases
 
@@ -98,7 +98,7 @@ OpenCode runs on **three clients** sharing the same backend:
 - Perfect for session sharing
 - Mobile-friendly
 
-![Client Architecture](images/client-architecture.png)
+![Client Architecture](images/client-architecture.jpg)
 
 **PAI Compatibility:**
 All PAI features (skills, agents, plugins) work identically across all three clients. Switch between terminal and browser mid-session without losing context.

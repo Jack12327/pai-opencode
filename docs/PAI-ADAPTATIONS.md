@@ -18,6 +18,7 @@ This document explains **what we changed** and **why**.
 |--------------|--------------|---------------|
 | v1.0.0 | PAI 2.4 | Core port, 8 handlers |
 | **v1.1.0** | **PAI 2.5** | Algorithm v0.2.25, 13 handlers, voice/sentiment |
+| **v1.3.0** | **PAI 2.5** | 16 agents, model tiers, 3 presets, wizard rewrite |
 
 ---
 
@@ -176,11 +177,58 @@ export function fileLog(message: string, level = "info") {
 {
   "plugins": [
     ".opencode/plugins/pai-unified.ts"
-  ]
+  ],
+  "agent": {
+    "Algorithm": {
+      "model": "anthropic/claude-opus-4-6"
+    },
+    "Engineer": {
+      "model": "opencode/kimi-k2.5",
+      "model_tiers": {
+        "quick": { "model": "opencode/glm-4.7" },
+        "standard": { "model": "opencode/kimi-k2.5" },
+        "advanced": { "model": "anthropic/claude-sonnet-4-5" }
+      }
+    }
+  }
 }
 ```
 
 ---
+
+## What We Added in v1.3 (Multi-Provider Agent System)
+
+### Agent System Expansion
+
+**What's New:**
+- **16 Agents** (expanded from ~11) - Full specialized agent roster
+- **Model Tier Routing** - `quick`/`standard`/`advanced` per agent
+- **3 Presets** - Simplified from 8 providers to 3 presets + custom
+- **Researcher Renames:**
+  - `ClaudeResearcher` → `DeepResearcher` (renamed for clarity)
+  - `PerplexityProResearcher` → Removed (merged into `PerplexityResearcher`)
+- **Model Routing:** Moved from `.md` frontmatter to `opencode.json` exclusively
+
+**Why:**
+- Centralized model configuration in `opencode.json`
+- Provider-agnostic agent files (skills don't specify models)
+- Easier provider switching without editing agent files
+
+**Configuration Example:**
+```json
+{
+  "agent": {
+    "Engineer": {
+      "model": "opencode/kimi-k2.5",
+      "model_tiers": {
+        "quick": { "model": "opencode/glm-4.7" },
+        "standard": { "model": "opencode/kimi-k2.5" },
+        "advanced": { "model": "anthropic/claude-sonnet-4-5" }
+      }
+    }
+  }
+}
+```
 
 ## What We Added in v1.1 (PAI 2.5 Upgrade)
 
@@ -280,6 +328,7 @@ See **MIGRATION.md** for full guide.
 | **Agents** | Lowercase → PascalCase | OpenCode requirement | Filename only |
 | **Logging** | stdout → file logging | TUI integrity | Debug workflow change |
 | **Deferred** | Voice/Observability | Focus on core first | Available in v1.x |
+| **Model Routing** | `.md` frontmatter → `opencode.json` exclusively | Centralized configuration | Easier provider switching |
 
 ---
 
@@ -292,4 +341,4 @@ See **MIGRATION.md** for full guide.
 
 ---
 
-**PAI-OpenCode v1.1** - Full PAI 2.5, Same Power, Different Platform
+**PAI-OpenCode v1.3** - Full PAI 2.5, 16 Agents, Multi-Provider Ready

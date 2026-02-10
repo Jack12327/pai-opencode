@@ -53,6 +53,10 @@ Route to the appropriate workflow based on the request.
 - Extensive research (4-5 providers, flexible angles, ~$0.10-0.50) → `Workflows/ExtensiveResearch.md`
   Trigger: "extensive research" - **REQUIRES USER CONFIRMATION**
 
+### Controller & Constraints
+- Research with enforced recursion limits → `ResearchController.md`  
+  **READ FIRST:** When spawning parallel research agents to prevent Matryoshka Paradox
+
 ### Deep Content Analysis
 - Extract alpha / deep analysis / highest-alpha insights -> `Workflows/ExtractAlpha.md`
 
@@ -111,3 +115,41 @@ Route to the appropriate workflow based on the request.
 - This ties research artifacts to the work item for learning and context
 
 **History (permanent):** `~/.opencode/History/research/YYYY-MM/YYYY-MM-DD_[topic]/`
+
+---
+
+## ⚠️ MANDATORY: Research Agent Constraints
+
+**CRITICAL RULES to prevent Matryoshka Paradox (recursive agent spawning):**
+
+### 1. Recursion Depth Limit
+- **MAXIMUM 1 level deep**: Parent Research Agent → Sub-Agent(s)
+- **Sub-Agents CANNOT spawn further research agents**
+- Any research task requiring more depth must be handled by the parent
+
+### 2. Sub-Agent Tier Restrictions
+When a Research Agent spawns Sub-Agents:
+- ✅ **ALLOWED**: `QuickResearch` (1 agent, FREE)
+- ✅ **ALLOWED**: `StandardResearch` (3 agents, ~$0.01)
+- ❌ **FORBIDDEN**: `ExtensiveResearch` in Sub-Agents
+
+### 3. ExtensiveResearch Requires Human Approval
+- ExtensiveResearch (~$0.10-0.50) **MUST** get explicit user confirmation before executing
+- Sub-Agents **CANNOT** auto-trigger expensive research modes
+- Pattern: Ask user → Get confirmation → Then spawn
+
+### 4. Enforcement
+**When implementing research workflows:**
+```
+// Parent agent (you) decides tier
+IF cost < $0.01 AND no_sub_agents_needed:
+  → Use QuickResearch or StandardResearch
+  
+IF cost > $0.01 OR complex multi-angle:
+  → Ask user for ExtensiveResearch approval
+  → Only spawn Sub-Agents with Quick/Standard modes
+  → Sub-Agents return results to parent
+  → Parent synthesizes (no further spawning)
+```
+
+**Violation:** If you see a plan with 3+ levels of research agents, STOP and restructure.

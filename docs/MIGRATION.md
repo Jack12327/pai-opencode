@@ -13,7 +13,7 @@ This guide helps you migrate an existing PAI 2.x installation from Claude Code t
 1. **Fresh Install** - Start clean with PAI-OpenCode defaults
 2. **Migration** - Transfer your customizations from Claude Code PAI
 
-![Migration Flow](images/migration-flow.png)
+![Migration Flow](images/migration-flow.jpg)
 
 ---
 
@@ -27,9 +27,12 @@ This guide helps you migrate an existing PAI 2.x installation from Claude Code t
   ```
 
 - **OpenCode** (AI coding assistant)
-  ```bash
-  go install github.com/anomalyco/opencode@latest
-  ```
+   ```bash
+   # For v1.3+ features (model tiers, agent routing), build from source:
+   # See INSTALL.md for detailed build instructions
+   go install github.com/anomalyco/opencode@latest
+   ```
+   > **Note:** v1.3.0 features (model tiers, agent-specific routing) require a dev build from source. See [INSTALL.md](../INSTALL.md) for build instructions.
 
 ---
 
@@ -146,6 +149,11 @@ PAI-OpenCode required several architectural adaptations to work with OpenCode. T
 |-----------|----------------|-------|
 | **Skills** | ✅ Full transfer | All skills work identically |
 | **Agents** | ✅ Full transfer | Renamed to PascalCase |
+
+**v1.3 Agent Changes:**
+- `ClaudeResearcher` → `DeepResearcher`
+- `PerplexityProResearcher` removed (use `PerplexityResearcher`)
+- `researcher.md` renamed to individual researcher files
 | **MEMORY** | ✅ Full transfer | Work, Learning, State preserved |
 | **Security Patterns** | ✅ Full transfer | `patterns.yaml` copied |
 | **USER Customizations** | ✅ Full transfer | TELOS, ABOUTME, etc. |
@@ -356,6 +364,20 @@ After successful migration:
 2. **Explore** - Try all skills and agents
 3. **Secure** - Review `.opencode/PAISECURITYSYSTEM/patterns.yaml`
 4. **Learn** - Read skill documentation in `.opencode/skills/*/SKILL.md`
+
+### Migrating from pre-v1.3
+
+If migrating from a pre-v1.3 installation:
+
+```bash
+# Re-run the wizard to update provider profiles and agent model routing
+bun run .opencode/PAIOpenCodeWizard.ts
+```
+
+This will update your `opencode.json` with:
+- New provider preset system (3 presets instead of 8 providers)
+- Agent-specific model tier routing (quick/standard/advanced)
+- 16 agents with updated researcher mappings
 
 ---
 
