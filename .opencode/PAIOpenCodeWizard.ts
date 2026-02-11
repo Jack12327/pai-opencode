@@ -3,7 +3,7 @@
  * PAI-OpenCode Installation Wizard v2.0
  *
  * Simplified 6-step setup for Personal AI Infrastructure:
- * - 3 presets: Anthropic Max, ZEN PAID, ZEN FREE
+ * - 4 presets: Anthropic, ZEN PAID, ZEN FREE, Ollama
  * - OpenCode dev build as prerequisite
  * - model_tiers support for cost-aware agent routing
  * - Creates opencode.json, settings.json, and identity files
@@ -13,7 +13,7 @@
  *   bun run PAIOpenCodeWizard.ts --help  # Show help and exit
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, lstatSync, symlinkSync, unlinkSync, realpathSync, renameSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir, userInfo } from 'os';
 import { execSync } from 'child_process';
@@ -47,12 +47,12 @@ const PROFILES_DIR = join(OPENCODE_DIR, 'profiles');
 
 const PRESETS = [
   {
-    name: 'Anthropic Max',
+    name: 'Anthropic',
     id: 'anthropic',
     profile: 'anthropic',
-    description: 'Claude models — best quality, requires Max subscription ($100/mo)',
-    authType: 'oauth' as const,
-    authNote: 'Run /connect in OpenCode to authenticate with your Anthropic Max subscription.',
+    description: 'Claude models — best quality, works with API key or Anthropic subscription (Pro/Max)',
+    authType: 'apikey-or-oauth' as const,
+    authNote: 'Set ANTHROPIC_API_KEY in your .env file, or run /connect in OpenCode to authenticate with your Anthropic subscription.',
   },
   {
     name: 'ZEN PAID',
@@ -69,6 +69,14 @@ const PRESETS = [
     description: 'Free community models — no cost, data may be used for improvement',
     authType: 'none' as const,
     authNote: 'No authentication needed. Free community models.',
+  },
+  {
+    name: 'Ollama (Local)',
+    id: 'local',
+    profile: 'local',
+    description: 'Fully offline with local models — private, no API keys, customize models after install',
+    authType: 'none' as const,
+    authNote: 'No authentication needed. Make sure Ollama is running (ollama serve). Customize models in opencode.json.',
   },
 ];
 
@@ -152,6 +160,8 @@ interface PrereqCheck {
   bun: boolean;
   bunVersion: string;
   git: boolean;
+  go: boolean;
+  goVersion: string;
 }
 
 function checkPrerequisites(): PrereqCheck {
@@ -159,7 +169,7 @@ function checkPrerequisites(): PrereqCheck {
   print(`${c.bold}Step 0: Prerequisites Check${c.reset}`);
   print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
 
-  const results: PrereqCheck = { bun: false, bunVersion: '', git: false };
+  const results: PrereqCheck = { bun: false, bunVersion: '', git: false, go: false, goVersion: '' };
 
   // Check bun with version requirement (1.3+ required)
   try {
@@ -192,6 +202,29 @@ function checkPrerequisites(): PrereqCheck {
     printInfo('Install Git: https://git-scm.com/downloads');
   }
 
+  // Check Go (required for building OpenCode from source)
+  try {
+    const goVersion = execSync('go version 2>/dev/null', { encoding: 'utf-8' }).trim();
+    const goMatch = goVersion.match(/go(\d+)\.(\d+)/);
+    if (goMatch) {
+      const major = parseInt(goMatch[1]);
+      const minor = parseInt(goMatch[2]);
+      if (major > 1 || (major === 1 && minor >= 22)) {
+        printSuccess(`Go ${major}.${minor} found`);
+        results.go = true;
+        results.goVersion = `${major}.${minor}`;
+      } else {
+        printWarning(`Go ${major}.${minor} found — version 1.22+ recommended for building OpenCode`);
+        results.go = true; // Still allow, just warn
+        results.goVersion = `${major}.${minor}`;
+      }
+    }
+  } catch {
+    printWarning('Go not found — needed to build OpenCode from source');
+    printInfo('Install Go: https://go.dev/dl/ or brew install go');
+    printInfo('If you skip the build step, Go is not required');
+  }
+
   return results;
 }
 
@@ -207,6 +240,21 @@ async function buildOpenCode(): Promise<boolean> {
   print(`  ${c.cyan}PAI-OpenCode requires OpenCode with model tier support${c.reset}`);
   print(`  ${c.gray}(development build — not yet available in stable release)${c.reset}`);
   print('');
+
+  // Check if Go is available (needed for building)
+  const goCheck = execCommand('go version', { silent: true });
+  if (!goCheck.success) {
+    printWarning('Go is not installed — required for building OpenCode from source');
+    printInfo('Install Go: https://go.dev/dl/ or brew install go');
+    print('');
+
+    const skipChoice = await promptChoice('', [
+      'Skip build — I\'ll install Go and try later',
+      'Skip build — I already have OpenCode installed',
+    ], 0);
+
+    return true; // Don't block the wizard
+  }
 
   // Check if opencode is already installed
   const whichResult = execCommand('which opencode', { silent: true });
@@ -252,8 +300,7 @@ async function buildOpenCode(): Promise<boolean> {
   print('');
 
   const buildDir = '/tmp/opencode-build';
-  // TODO: Update clone URL to Steffen025/opencode once custom patches are pushed
-  const cloneUrl = 'https://github.com/anomalyco/opencode.git';
+  const cloneUrl = 'https://github.com/Steffen025/opencode.git';
 
   try {
     // Clean up any existing build
@@ -271,12 +318,12 @@ async function buildOpenCode(): Promise<boolean> {
       return false;
     }
 
-    // Checkout dev branch (development branch with latest features)
-    printInfo('Checking out dev branch...');
-    const checkoutResult = execCommand('git checkout dev', { cwd: buildDir, silent: false });
+    // Checkout feature/model-tiers branch (development branch with model tier support)
+    printInfo('Checking out feature/model-tiers branch...');
+    const checkoutResult = execCommand('git checkout feature/model-tiers', { cwd: buildDir, silent: false });
 
     if (!checkoutResult.success) {
-      printError('Failed to checkout dev branch');
+      printError('Failed to checkout feature/model-tiers branch');
       return false;
     }
 
@@ -427,6 +474,9 @@ async function selectPreset(): Promise<(typeof PRESETS)[number]> {
     print(`  ${c.bold}Authentication:${c.reset}`);
     print(`  ${c.gray}${selected.authNote}${c.reset}`);
   }
+
+  print('');
+  print(`  ${c.gray}💡 Other providers (OpenAI, Google, etc.) can be configured later in opencode.json${c.reset}`);
 
   return selected;
 }
@@ -767,6 +817,136 @@ function fixPermissions(targetDir: string): void {
 }
 
 // ============================================================================
+// STEP 5b: SYMLINK SETUP
+// ============================================================================
+
+async function setupSymlink(): Promise<void> {
+  print('');
+  print(`${c.bold}Setting up ~/.opencode symlink${c.reset}`);
+  print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
+
+  const homeOpencode = join(HOME, '.opencode');
+
+  // Case 1: Nothing exists → create symlink
+  if (!existsSync(homeOpencode)) {
+    try {
+      symlinkSync(OPENCODE_DIR, homeOpencode);
+      printSuccess(`Created symlink: ~/.opencode → ${OPENCODE_DIR}`);
+    } catch (err: any) {
+      printWarning(`Could not create symlink: ${err.message}`);
+      printInfo(`Create it manually: ln -s ${OPENCODE_DIR} ~/.opencode`);
+    }
+    return;
+  }
+
+  // Case 2: Symlink already exists
+  try {
+    const stats = lstatSync(homeOpencode);
+    if (stats.isSymbolicLink()) {
+      printInfo(`Symlink ~/.opencode already exists`);
+
+      // Check if it points to the right place
+      const resolvedTarget = realpathSync(homeOpencode);
+      const resolvedOpencode = realpathSync(OPENCODE_DIR);
+      if (resolvedTarget === resolvedOpencode) {
+        printSuccess('Symlink points to this installation ✓');
+      } else {
+        printWarning(`Symlink points to: ${resolvedTarget}`);
+        printInfo(`Expected: ${resolvedOpencode}`);
+
+        const choice = await promptChoice('Update symlink to point to this installation?', [
+          'Yes, update symlink (Recommended)',
+          'No, keep existing symlink',
+        ], 0);
+
+        if (choice === 0) {
+          try {
+            unlinkSync(homeOpencode);
+            symlinkSync(OPENCODE_DIR, homeOpencode);
+            printSuccess(`Updated symlink: ~/.opencode → ${OPENCODE_DIR}`);
+          } catch (err: any) {
+            printError(`Failed to update symlink: ${err.message}`);
+          }
+        }
+      }
+      return;
+    }
+  } catch (e) {
+    // lstatSync failed, treat as regular directory
+  }
+
+  // Case 3: Regular directory exists (not a symlink)
+  printWarning('~/.opencode exists as a regular directory');
+  print('');
+
+  const choice = await promptChoice('How would you like to handle this?', [
+    'Back up existing and create symlink (Recommended)',
+    'Skip — I\'ll handle it manually',
+  ], 0);
+
+  if (choice === 0) {
+    const backupPath = `${homeOpencode}.backup-${Date.now()}`;
+    try {
+      execCommand(`mv "${homeOpencode}" "${backupPath}"`, { silent: true });
+      printSuccess(`Backed up to: ${backupPath}`);
+
+      symlinkSync(OPENCODE_DIR, homeOpencode);
+      printSuccess(`Created symlink: ~/.opencode → ${OPENCODE_DIR}`);
+    } catch (err: any) {
+      printError(`Failed: ${err.message}`);
+      printInfo(`Manual steps:`);
+      printInfo(`  mv ~/.opencode ~/.opencode.backup`);
+      printInfo(`  ln -s ${OPENCODE_DIR} ~/.opencode`);
+    }
+  } else {
+    printInfo('Skipped symlink setup');
+    printInfo(`To create manually: ln -s ${OPENCODE_DIR} ~/.opencode`);
+  }
+}
+
+function setupConfigSymlink(): void {
+  const configSource = join(PROJECT_ROOT, 'opencode.json');
+  const opencodeDir = join(PROJECT_ROOT, '.opencode');
+  const symlinkTarget = join(opencodeDir, 'opencode.json');
+
+  // Only create if source exists and .opencode dir exists
+  if (!existsSync(configSource)) return;
+  if (!existsSync(opencodeDir)) return;
+
+  // Check if symlink already exists and points to the right place
+  if (existsSync(symlinkTarget)) {
+    try {
+      const stats = lstatSync(symlinkTarget);
+      if (stats.isSymbolicLink()) {
+        const resolvedPath = realpathSync(symlinkTarget);
+        if (resolvedPath === realpathSync(configSource)) {
+          // Already correct
+          return;
+        }
+        // Wrong target, remove and recreate
+        unlinkSync(symlinkTarget);
+      } else {
+        // It's a real file, back it up and replace
+        const backup = symlinkTarget + '.bak';
+        renameSync(symlinkTarget, backup);
+        printWarning(`Backed up existing .opencode/opencode.json to opencode.json.bak`);
+      }
+    } catch (e) {
+      // Can't read, try to remove
+      try { unlinkSync(symlinkTarget); } catch {}
+    }
+  }
+
+  // Create relative symlink: .opencode/opencode.json → ../opencode.json
+  try {
+    symlinkSync('../opencode.json', symlinkTarget);
+    printSuccess('Created symlink: .opencode/opencode.json → ../opencode.json');
+  } catch (e: any) {
+    printWarning(`Could not create config symlink: ${e.message}`);
+  }
+}
+
+// ============================================================================
 // VALIDATION
 // ============================================================================
 
@@ -855,16 +1035,17 @@ async function main(): Promise<void> {
     print('  bun run PAIOpenCodeWizard.ts --help    Show this help message');
     print('');
     print(`${c.bold}What it does:${c.reset}`);
-    print('  1. Checks prerequisites (Bun 1.3+, git)');
+    print('  1. Checks prerequisites (Bun 1.3+, git, Go 1.22+)');
     print('  2. Builds OpenCode from development source');
-    print('  3. Guides you through 3 preset provider choices');
+    print('  3. Guides you through 4 preset provider choices');
     print('  4. Sets up your identity and AI assistant name');
     print('  5. Generates configuration files with model_tiers support');
     print('');
     print(`${c.bold}Presets:${c.reset}`);
-    print('  A. Anthropic Max — Best quality, requires subscription');
+    print('  A. Anthropic — Best quality, API key or subscription');
     print('  B. ZEN PAID — Budget-friendly, privacy-preserving');
     print('  C. ZEN FREE — No cost, data may be used for improvement');
+    print('  D. Ollama — Fully offline, local models');
     print('');
     process.exit(0);
   }
@@ -917,6 +1098,12 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // Create config symlink: .opencode/opencode.json → ../opencode.json
+  setupConfigSymlink();
+
+  // Step 5b: Symlink setup
+  await setupSymlink();
+
   // Step 6: Validate and show success
   print('');
   const { passed, results } = validate();
@@ -944,6 +1131,11 @@ async function main(): Promise<void> {
     if (preset.authType === 'oauth') {
       print(`  ${c.cyan}2.${c.reset} Authenticate with your provider:`);
       print(`     ${c.green}/connect${c.reset}`);
+      print('');
+    } else if (preset.authType === 'apikey-or-oauth') {
+      print(`  ${c.cyan}2.${c.reset} Set up authentication (choose one):`);
+      print(`     ${c.gray}Option A:${c.reset} Add ${c.green}ANTHROPIC_API_KEY=sk-...${c.reset} to ${c.cyan}.opencode/.env${c.reset}`);
+      print(`     ${c.gray}Option B:${c.reset} Run ${c.green}/connect${c.reset} in OpenCode to use your Anthropic subscription`);
       print('');
     }
 

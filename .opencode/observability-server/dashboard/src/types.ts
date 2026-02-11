@@ -8,7 +8,7 @@ export interface Stats {
 export interface Event {
   id: string;
   session_id: string;
-  type: string;
+  event_type: string;
   timestamp: string;
   data: Record<string, any>;
   metadata?: {

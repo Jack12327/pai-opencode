@@ -26,8 +26,8 @@
         class="flex items-start space-x-3 p-2 rounded hover:bg-github-bg/50 transition-colors"
       >
         <span class="text-github-muted whitespace-nowrap">{{ formatTime(event.timestamp) }}</span>
-        <span class="font-semibold whitespace-nowrap" :class="getEventTypeColor(event.type)">
-          {{ event.type }}
+        <span class="font-semibold whitespace-nowrap" :class="getEventTypeColor(event.event_type)">
+          {{ event.event_type }}
         </span>
         <span class="text-github-text flex-1 truncate">
           {{ getEventDescription(event) }}
@@ -64,13 +64,13 @@ function getEventTypeColor(type: string): string {
 }
 
 function getEventDescription(event: Event): string {
-  if (event.type === 'tool.execute' && event.metadata?.tool_name) {
+  if (event.event_type === 'tool.execute' && event.metadata?.tool_name) {
     return `${event.metadata.tool_name}: ${JSON.stringify(event.data).slice(0, 50)}...`
   }
-  if (event.type === 'message.user' || event.type === 'message.assistant') {
+  if (event.event_type === 'message.user' || event.event_type === 'message.assistant') {
     return JSON.stringify(event.data.content || event.data).slice(0, 80)
   }
-  if (event.type.startsWith('session')) {
+  if (event.event_type.startsWith('session')) {
     return event.session_id
   }
   return JSON.stringify(event.data).slice(0, 80)

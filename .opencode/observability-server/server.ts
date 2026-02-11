@@ -176,7 +176,12 @@ async function handleRequest(req: Request): Promise<Response> {
 
       // Insert into database
       insertEvent(event);
-      
+
+      // Handle session lifecycle events
+      if (event.event_type === 'session.end') {
+        completeSession(event.session_id, 'completed');
+      }
+
       // Broadcast to SSE clients
       broadcastToSSE(event);
       

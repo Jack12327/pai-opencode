@@ -67,7 +67,7 @@
               class="bg-github-bg p-3 rounded text-sm"
             >
               <div class="flex items-center justify-between mb-1">
-                <span class="font-semibold" :class="getEventTypeColor(event.type)">{{ event.type }}</span>
+                <span class="font-semibold" :class="getEventTypeColor(event.event_type)">{{ event.event_type }}</span>
                 <span class="text-github-muted">{{ formatTime(event.timestamp) }}</span>
               </div>
               <div v-if="event.metadata?.tool_name" class="text-github-muted">

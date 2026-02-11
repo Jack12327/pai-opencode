@@ -31,8 +31,17 @@ const PORT = parseInt(process.env.PAI_VOICE_PORT || "8888");
 // =============================================================================
 // TTS Provider Configuration
 // =============================================================================
-// Options: "google" | "elevenlabs" (default: elevenlabs for backward compatibility)
-const TTS_PROVIDER = (process.env.TTS_PROVIDER || 'elevenlabs').toLowerCase();
+// Options: "google" | "elevenlabs" | "macos" (default: elevenlabs for backward compatibility)
+// "macos" uses the built-in `say` command — free, offline, no API key needed
+let TTS_PROVIDER = (process.env.TTS_PROVIDER || 'elevenlabs').toLowerCase();
+
+// Auto-detect: if no API keys configured and on macOS, fall back to macOS Say
+if (TTS_PROVIDER === 'elevenlabs' && !process.env.ELEVENLABS_API_KEY && process.platform === 'darwin') {
+  if (!process.env.GOOGLE_API_KEY) {
+    TTS_PROVIDER = 'macos';
+    console.log('💡 No API keys found — using macOS Say as TTS fallback (free, offline)');
+  }
+}
 
 // ElevenLabs Configuration
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
@@ -324,6 +333,18 @@ async function generateSpeechGoogle(
   return bytes.buffer;
 }
 
+// macOS Say TTS Generation — free, offline, no API key needed
+// Uses the built-in `say` command on macOS
+async function generateSpeechMacOS(
+  text: string,
+  voice: string = 'Samantha',
+  speakingRate: number = 1.0
+): Promise<{ type: 'macos-say'; text: string; voice: string; rate: number }> {
+  // macOS say doesn't generate audio files by default — we return a marker
+  // and handle playback differently in playAudioInternal
+  return { type: 'macos-say', text, voice, rate: speakingRate };
+}
+
 // Unified speech generation - routes to the configured provider
 async function generateSpeech(
   text: string,
@@ -395,7 +416,9 @@ async function sendNotification(
   safeMessage = cleaned;
 
   // Generate and play voice
-  const apiKeyConfigured = TTS_PROVIDER === 'google' ? GOOGLE_API_KEY : ELEVENLABS_API_KEY;
+  const apiKeyConfigured = TTS_PROVIDER === 'google' ? GOOGLE_API_KEY :
+                           TTS_PROVIDER === 'macos' ? true :
+                           ELEVENLABS_API_KEY;
   if (voiceEnabled && apiKeyConfigured) {
     try {
       const voiceConfig = voiceId ? getVoiceConfig(voiceId) : null;
@@ -420,8 +443,14 @@ async function sendNotification(
 
       console.log(`🎙️  Generating speech (voice: ${voice}, rate: ${speakingRate})`);
 
-      const audioBuffer = await generateSpeech(safeMessage, voice, voiceSettings, speakingRate);
-      await playAudio(audioBuffer);
+      if (TTS_PROVIDER === 'macos' && process.platform === 'darwin') {
+        // macOS Say — direct playback, no audio buffer needed
+        const macVoice = voice !== DEFAULT_VOICE_ID ? voice : 'Samantha';
+        await playMacOSSay(safeMessage, macVoice, speakingRate);
+      } else {
+        const audioBuffer = await generateSpeech(safeMessage, voice, voiceSettings, speakingRate);
+        await playAudio(audioBuffer);
+      }
     } catch (error) {
       console.error("Failed to generate/play speech:", error);
     }
@@ -522,6 +551,35 @@ async function playAudioInternal(audioBuffer: ArrayBuffer): Promise<void> {
   });
 }
 
+// macOS Say playback — queued like other audio to prevent overlap
+async function playMacOSSay(text: string, voice: string = 'Samantha', rate: number = 1.0): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // Convert rate: say uses words-per-minute (default ~175), our rate is a multiplier
+    const wpm = Math.round(175 * rate);
+    const volume = getVolumeSetting();
+
+    // say command: -v voice -r rate
+    const args = ['-v', voice, '-r', wpm.toString(), text];
+
+    console.log(`🍎 macOS Say: voice=${voice}, rate=${wpm}wpm`);
+
+    const proc = spawn('/usr/bin/say', args);
+
+    proc.on('error', (error) => {
+      console.error('macOS Say error:', error);
+      reject(error);
+    });
+
+    proc.on('exit', (code) => {
+      if (code === 0 || code === null) {
+        resolve();
+      } else {
+        reject(new Error(`say exited with code ${code}`));
+      }
+    });
+  });
+}
+
 // Rate limiting
 const requestCounts = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT = 10;
@@ -610,7 +668,7 @@ const server = serve({
           status: "healthy",
           port: PORT,
           platform: process.platform,
-          tts_provider: TTS_PROVIDER === 'google' ? `Google Cloud TTS (${CURRENT_TIER.name})` : 'ElevenLabs',
+          tts_provider: TTS_PROVIDER === 'google' ? `Google Cloud TTS (${CURRENT_TIER.name})` : TTS_PROVIDER === 'macos' ? 'macOS Say (built-in)' : 'ElevenLabs',
           tier: TTS_PROVIDER === 'google' ? GOOGLE_TTS_TIER : null,
           default_voice: DEFAULT_VOICE_ID,
           api_key_configured: TTS_PROVIDER === 'google' ? !!GOOGLE_API_KEY : !!ELEVENLABS_API_KEY,
@@ -621,7 +679,8 @@ const server = serve({
           providers: {
             active: TTS_PROVIDER,
             google: googleInfo,
-            elevenlabs: { configured: !!ELEVENLABS_API_KEY, voice: DEFAULT_ELEVENLABS_VOICE }
+            elevenlabs: { configured: !!ELEVENLABS_API_KEY, voice: DEFAULT_ELEVENLABS_VOICE },
+            macos: { available: process.platform === 'darwin', voice: 'Samantha' }
           },
           named_agents: ['pai', 'intern', 'engineer', 'architect']
         }),
@@ -646,6 +705,11 @@ if (TTS_PROVIDER === 'google') {
   console.log(`🔑 Google API Key: ${GOOGLE_API_KEY ? '✅ Configured' : '❌ Missing'}`);
   console.log(`🎯 Features: ${CURRENT_TIER.features.join(', ')}`);
   console.log(`💡 Switch tier: GOOGLE_TTS_TIER=premium or GOOGLE_TTS_TIER=standard in .env`);
+} else if (TTS_PROVIDER === 'macos') {
+  console.log(`🎙️  TTS Provider: macOS Say (built-in, free, offline)`);
+  console.log(`🗣️  Default voice: Samantha`);
+  console.log(`💰 Cost: FREE (no API key needed)`);
+  console.log(`💡 Switch to cloud TTS: Set TTS_PROVIDER=google or TTS_PROVIDER=elevenlabs in .env`);
 } else {
   console.log(`🎙️  TTS Provider: ElevenLabs`);
   console.log(`🗣️  Default voice: ${DEFAULT_VOICE_ID}`);

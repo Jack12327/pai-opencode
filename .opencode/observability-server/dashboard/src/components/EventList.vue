@@ -49,8 +49,8 @@
         <div class="flex items-start justify-between">
           <div class="flex-1 space-y-1">
             <div class="flex items-center space-x-3">
-              <span class="font-semibold" :class="getEventTypeColor(event.type)">
-                {{ event.type }}
+              <span class="font-semibold" :class="getEventTypeColor(event.event_type)">
+                {{ event.event_type }}
               </span>
               <span class="text-sm text-github-muted">{{ formatTimestamp(event.timestamp) }}</span>
             </div>
