@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## v1.3.2 — Wizard Fixes + Fork Alignment (2026-02-11)
+
+### Fixed
+- **Wizard:** 4 provider presets (Anthropic, Zen Paid, Zen Free, Ollama Local) with clearer auth guidance
+- **Wizard:** Build-from-source now clones from `Steffen025/opencode` fork (`feature/model-tiers` branch)
+- **Wizard:** Non-blocking Go prerequisite check (warning only, no abort)
+- **Wizard:** Auto-creates `.opencode/opencode.json` symlink → `../opencode.json` (single source of truth)
+- **Voice Server:** macOS `say` TTS fallback when no API keys configured
+- **Observability Dashboard:** Fixed `type` → `event_type` field naming across all Vue components
+- **Observability Server:** Added `completeSession()` on `session.end` events
+
+### Deprecated
+- **Observability Dashboard** — Will be removed in a future version. The Vue-based dashboard adds significant dependency overhead with limited practical value. Server-side JSONL event logging remains unaffected.
+
+---
+
 ## v1.3.1 — Plugin Crash Fix + Interface Alignment (2026-02-11)
 
 ### Fixed
