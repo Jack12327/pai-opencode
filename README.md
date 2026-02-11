@@ -38,16 +38,20 @@ PAI-OpenCode is the complete port of **Daniel Miessler's Personal AI Infrastruct
 |-----------|----------|
 | **PAI was built for Claude Code** (Anthropic only) | PAI-OpenCode works with **any AI provider** |
 | **Vendor lock-in** limits your options | Switch providers freely while keeping your infrastructure |
+| **One model fits all** wastes money or quality | Each agent scales to the right model per task — cheap for simple work, powerful for complex reasoning |
 | **Generic AI assistants** don't know your workflow | PAI's skills, memory, and plugins personalize to *your* needs |
 | **One-shot interactions** lose context | PAI's memory system builds knowledge over time |
 
 **The scaffolding is more important than the model.** PAI-OpenCode gives you:
 
-✅ Provider freedom (Claude, GPT-4, Gemini, Llama, etc.)
+✅ **Dynamic per-task model routing** — the orchestrator selects the right model and provider for each task, automatically
+✅ Provider freedom (Claude, GPT-4, Gemini, Kimi, Ollama, etc.)
 ✅ Full PAI infrastructure (skills, agents, memory, plugins)
 ✅ Real-time session sharing (OpenCode feature)
 ✅ Terminal + Desktop + Web clients
 ✅ Community-driven, open-source foundation
+
+> **Note:** Dynamic per-task model routing is built by the PAI-OpenCode agent system on top of OpenCode's multi-provider support. Other AI coding tools either lock you to one provider (Claude Code, Copilot) or let you switch manually (Cursor, Aider) — but none route different models to the same agent automatically based on task complexity.
 
 ---
 
