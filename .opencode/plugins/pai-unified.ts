@@ -496,31 +496,20 @@ export const PaiUnified: Plugin = async (ctx) => {
         }
 
         // === USER MESSAGE HANDLING ===
-        // OpenCode sends message.updated AND message.part.updated events
-        // We need to check BOTH for user messages
-        if (eventType === "message.updated" || eventType === "message.part.updated") {
-          // DEBUG: Log full event structure to find where user message is
+        // IMPORTANT: Only use message.updated (complete messages), NOT message.part.updated.
+        // message.part.updated fires per streaming CHUNK — using it here caused
+        // sentiment analysis (and thus claude CLI spawns via Inference.ts) to trigger
+        // hundreds of times per response, saturating CPU. See: GitHub Issue #17
+        if (eventType === "message.updated") {
           const eventData = input.event as any;
-          fileLog(`[message.updated] EVENT KEYS: ${Object.keys(eventData || {}).join(", ")}`, "info");
-          fileLog(`[message.updated] properties keys: ${Object.keys(eventData?.properties || {}).join(", ")}`, "info");
-          fileLog(`[message.updated] FULL EVENT: ${JSON.stringify(eventData).substring(0, 500)}`, "debug");
-          
-          // FIXED: message.part.updated uses properties.part, not properties.message
-          // Structure: eventData.properties.part.text (for user messages)
-          const part = eventData?.properties?.part;
           const message = eventData?.properties?.message;
           
-          // Extract text from part (message.part.updated) or message (message.updated)
+          // Only process user messages (assistant messages handled above at line ~428)
           let userText: string | null = null;
           
-          if (part?.type === "text" && typeof part.text === "string") {
-            // This is a text part from message.part.updated
-            userText = part.text;
-            fileLog(`[message.part.updated] Extracted from part.text: "${userText.substring(0, 100)}..."`, "debug");
-          } else if (message?.role === "user") {
-            // This is a full message from message.updated
+          if (message?.role === "user") {
             userText = extractTextContent(message);
-            fileLog(`[message.updated] Extracted from message.content: "${userText.substring(0, 100)}..."`, "debug");
+            fileLog(`[message.updated] User message: "${userText.substring(0, 100)}..."`, "debug");
           }
           
           // Process user message if we found it
