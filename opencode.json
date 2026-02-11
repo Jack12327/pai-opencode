@@ -20,17 +20,6 @@
       "prompt": "You are a Personal AI assistant powered by PAI-OpenCode infrastructure."
     }
   },
-  "pai": {
-    "inference": {
-      "baseURL": "https://openrouter.ai/api/v1",
-      "apiKey": "$OPENROUTER_API_KEY",
-      "models": {
-        "fast": "openai/gpt-4o-mini",
-        "standard": "anthropic/claude-sonnet-4-5",
-        "smart": "anthropic/claude-opus-4-6"
-      }
-    }
-  },
   "agent": {
     "Algorithm": {
       "model": "anthropic/claude-opus-4-6"

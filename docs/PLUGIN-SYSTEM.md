@@ -395,4 +395,4 @@ Tracks ISC criteria satisfaction and captures learnings.
 
 ---
 
-**PAI-OpenCode v1.2** - 14 Handlers, Full PAI 2.5 Algorithm
+**PAI-OpenCode v1.3** — 14 Handlers, Full PAI 2.5 Algorithm, Dynamic Tier Routing

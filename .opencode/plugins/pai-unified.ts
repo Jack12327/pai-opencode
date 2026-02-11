@@ -13,7 +13,6 @@
  * All logging goes through file-logger.ts to prevent TUI corruption.
  *
  * @module pai-unified
- * @version 1.0.0
  */
 
 import type { Plugin, Hooks } from "@opencode-ai/plugin";
@@ -99,7 +98,7 @@ function extractTextContent(message: any): string {
 export const PaiUnified: Plugin = async (ctx) => {
   // Clear log at plugin load (new session)
   clearLog();
-  fileLog("=== PAI-OpenCode Plugin v1.0.0 Loaded ===");
+  fileLog("=== PAI-OpenCode Plugin Loaded ===");
   fileLog(`Working directory: ${process.cwd()}`);
   fileLog("Hooks: Context, Security, Work, Ratings, Agents, Learning");
 
@@ -117,6 +116,7 @@ export const PaiUnified: Plugin = async (ctx) => {
         // Emit session start
         emitSessionStart({ model: (input as any).model }).catch(() => {});
 
+
         const result = await loadContext();
 
         if (result.success && result.context) {
@@ -125,7 +125,7 @@ export const PaiUnified: Plugin = async (ctx) => {
           
           // Emit context loaded
           const contextSize = result.context.length;
-          emitContextLoaded(1, contextSize).catch(() => {});
+          emitContextLoaded({ files_loaded: 1, total_size: contextSize, success: true }).catch(() => {});
         } else {
           fileLog(
             `Context injection skipped: ${result.error || "unknown"}`,
@@ -163,13 +163,13 @@ export const PaiUnified: Plugin = async (ctx) => {
           case "block":
             output.status = "deny";
             fileLog(`BLOCKED: ${result.reason}`, "error");
-            emitSecurityBlock(tool, result.reason || "Unknown").catch(() => {});
+            emitSecurityBlock({ tool, reason: result.reason || "Unknown" }).catch(() => {});
             break;
 
           case "confirm":
             output.status = "ask";
             fileLog(`CONFIRM: ${result.reason}`, "warn");
-            emitSecurityWarn(tool, result.reason || "Requires confirmation").catch(() => {});
+            emitSecurityWarn({ tool, reason: result.reason || "Requires confirmation" }).catch(() => {});
             break;
 
           case "allow":
@@ -206,14 +206,14 @@ export const PaiUnified: Plugin = async (ctx) => {
 
       if (result.action === "block") {
         fileLog(`BLOCKED: ${result.reason}`, "error");
-        emitSecurityBlock(input.tool, result.reason || "Unknown", result.pattern).catch(() => {});
+        emitSecurityBlock({ tool: input.tool, reason: result.reason || "Unknown", pattern: result.pattern }).catch(() => {});
         // Throwing an error blocks the tool execution
         throw new Error(`[PAI Security] ${result.message || result.reason}`);
       }
 
       if (result.action === "confirm") {
         fileLog(`WARNING: ${result.reason}`, "warn");
-        emitSecurityWarn(input.tool, result.reason || "Requires confirmation").catch(() => {});
+        emitSecurityWarn({ tool: input.tool, reason: result.reason || "Requires confirmation" }).catch(() => {});
         // For now, log warning but allow - OpenCode will handle its own permission prompt
       }
 
@@ -234,7 +234,7 @@ export const PaiUnified: Plugin = async (ctx) => {
         // Emit tool execution
         const args = (input as any).args || (output as any).args || {};
         const resultLength = output.result ? JSON.stringify(output.result).length : 0;
-        emitToolExecute(input.tool, args, undefined, true, resultLength).catch(() => {});
+        emitToolExecute({ tool: input.tool, args, success: true, result_length: resultLength }).catch(() => {});
 
         // === AGENT OUTPUT CAPTURE ===
         // Check for Task tool (subagent) completion
@@ -243,7 +243,7 @@ export const PaiUnified: Plugin = async (ctx) => {
           
           // Emit agent complete
           const agentType = args.subagent_type || "unknown";
-          emitAgentComplete(agentType, resultLength).catch(() => {});
+          emitAgentComplete({ agent_type: agentType, result_length: resultLength }).catch(() => {});
 
           const result = output.result;
 
@@ -393,7 +393,7 @@ export const PaiUnified: Plugin = async (ctx) => {
               
               // Emit learning captured for each learning
               learningResult.learnings.forEach((learning: any) => {
-                emitLearningCaptured(learning.category || "unknown", learning.filepath || "unknown").catch(() => {});
+                emitLearningCaptured({ category: learning.category || "unknown", filepath: learning.filepath || "unknown" }).catch(() => {});
               });
             }
           } catch (error) {
@@ -444,11 +444,11 @@ export const PaiUnified: Plugin = async (ctx) => {
                   }
                   
                   // Emit ISC validation
-                  emitISCValidated(
-                    iscResult.criteriaCount || 0,
-                    iscResult.warnings.length === 0,
-                    iscResult.warnings || []
-                  ).catch(() => {});
+                  emitISCValidated({
+                    criteriaCount: iscResult.criteriaCount || 0,
+                    all_passed: iscResult.warnings.length === 0,
+                    warnings: iscResult.warnings || []
+                  }).catch(() => {});
                 }
               } catch (error) {
                 fileLogError("[ISC Validation] Failed", error);
@@ -463,7 +463,7 @@ export const PaiUnified: Plugin = async (ctx) => {
                   await handleVoiceNotification(voiceCompletion, sessionId);
                   
                   // Emit voice sent
-                  emitVoiceSent(voiceCompletion.length).catch(() => {});
+                  emitVoiceSent({ message_length: voiceCompletion.length }).catch(() => {});
                   
                   // === TAB STATE UPDATE ===
                   // Update terminal tab title/color after completion
@@ -482,7 +482,7 @@ export const PaiUnified: Plugin = async (ctx) => {
               // Emit assistant message
               const hasVoiceLine = !!extractVoiceCompletion(responseText);
               const hasISC = responseText.includes("🤖") || responseText.includes("OBSERVE");
-              emitAssistantMessage(responseText.length, hasVoiceLine, hasISC).catch(() => {});
+              emitAssistantMessage({ content_length: responseText.length, has_voice_line: hasVoiceLine, has_isc: hasISC }).catch(() => {});
 
               // === RESPONSE CAPTURE ===
               // Capture response for work tracking and learning
@@ -525,10 +525,10 @@ export const PaiUnified: Plugin = async (ctx) => {
                 fileLog(`Rating captured: ${ratingResult.rating.score}/10`, "info");
                 
                 // Emit explicit rating
-                emitExplicitRating(
-                  ratingResult.rating.score,
-                  ratingResult.rating.comment
-                ).catch(() => {});
+                emitExplicitRating({
+                  score: ratingResult.rating.score,
+                  comment: ratingResult.rating.comment
+                }).catch(() => {});
               } else {
                 fileLog(`Rating capture failed: ${ratingResult.error}`, "warn");
               }
@@ -541,11 +541,11 @@ export const PaiUnified: Plugin = async (ctx) => {
                 
                 // Emit implicit sentiment if captured
                 if (sentimentResult && sentimentResult.score !== undefined) {
-                  emitImplicitSentiment(
-                    sentimentResult.score,
-                    sentimentResult.confidence || 0,
-                    sentimentResult.indicators || []
-                  ).catch(() => {});
+                  emitImplicitSentiment({
+                    score: sentimentResult.score,
+                    confidence: sentimentResult.confidence || 0,
+                    indicators: sentimentResult.indicators || []
+                  }).catch(() => {});
                 }
               } catch (error) {
                 fileLogError('[ImplicitSentiment] Failed (non-blocking)', error);
@@ -553,7 +553,7 @@ export const PaiUnified: Plugin = async (ctx) => {
             }
             
             // Emit user message
-            emitUserMessage(userText.length, !!rating).catch(() => {});
+            emitUserMessage({ content_length: userText.length, has_rating: !!rating }).catch(() => {});
             
             // === AUTO-WORK CREATION ===
             const currentSession = getCurrentSession();

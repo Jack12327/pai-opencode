@@ -28,7 +28,6 @@
  * - 10: Extraordinary enthusiasm
  *
  * @module implicit-sentiment
- * @version 1.0.0
  */
 
 import { appendFileSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'fs';

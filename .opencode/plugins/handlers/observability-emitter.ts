@@ -9,8 +9,10 @@
  * - Fail silently: Server unavailability is not an error
  * - Fast timeout: 1 second max to avoid latency impact
  * 
+ * FIXED: All emit functions accept object parameters to match
+ * pai-unified.ts call patterns. Defensive null-checks on all args.
+ * 
  * @module observability-emitter
- * @version 1.0.0
  */
 
 import { randomUUID } from "crypto";
@@ -140,15 +142,23 @@ export function resetSession(): void {
 // ============================================================================
 // Event Helper Functions
 // These wrap emitEvent with type-specific data formatting
+//
+// FIXED: All functions accept object parameters to match pai-unified.ts
+// call patterns. Defensive null-checks prevent Object.keys(undefined) crashes.
 // ============================================================================
 
 /**
  * Emit session start event
+ *
+ * Accepts metadata object with any additional properties
  */
 export async function emitSessionStart(metadata: Record<string, any> = {}): Promise<void> {
-  const sessionId = generateSessionId();
-  setSessionId(sessionId);
-  
+  // Only generate new session ID if not already set (avoid double-emit)
+  if (!currentSessionId) {
+    const sessionId = generateSessionId();
+    setSessionId(sessionId);
+  }
+
   await emitEvent("session.start", {
     ...metadata,
     working_directory: process.cwd(),
@@ -158,32 +168,58 @@ export async function emitSessionStart(metadata: Record<string, any> = {}): Prom
 
 /**
  * Emit session end event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitSessionEnd(
-  duration_ms?: number,
-  stats?: Record<string, any>
+  input: {
+    duration_ms?: number;
+    eventType?: string;
+    timestamp?: string;
+  } & Record<string, any> = {}
 ): Promise<void> {
+  const { duration_ms, ...rest } = input;
   await emitEvent("session.end", {
     duration_ms,
-    ...stats,
+    ...rest,
   });
   resetSession();
 }
 
 /**
  * Emit tool execution event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitToolExecute(
-  tool: string,
-  args: Record<string, any>,
-  duration_ms?: number,
-  success?: boolean,
-  result_length?: number
+  input: {
+    tool: string;
+    args?: string | Record<string, any>;
+    duration_ms?: number;
+    success?: boolean;
+    result_length?: number;
+  }
 ): Promise<void> {
+  const { tool, args, duration_ms, success, result_length } = input;
+
+  // Defensive: handle undefined, string, or object args
+  let argsKeys: string[] = [];
+  let argsPreview = "";
+
+  if (args) {
+    if (typeof args === "string") {
+      argsKeys = ["serialized"];
+      argsPreview = args.substring(0, 200);
+    } else {
+      argsKeys = Object.keys(args);
+      argsPreview = JSON.stringify(args).substring(0, 200);
+    }
+  }
+
   await emitEvent("tool.execute", {
     tool,
-    args_keys: Object.keys(args),
-    args_preview: JSON.stringify(args).substring(0, 200),
+    args_keys: argsKeys,
+    args_preview: argsPreview,
     duration_ms,
     success,
     result_length,
@@ -192,168 +228,281 @@ export async function emitToolExecute(
 
 /**
  * Emit security block event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitSecurityBlock(
-  tool: string,
-  reason: string,
-  pattern?: string
+  input: {
+    tool: string;
+    reason: string;
+    pattern?: string;
+    args?: string;
+  }
 ): Promise<void> {
+  const { tool, reason, pattern, args } = input;
   await emitEvent("security.block", {
     tool,
     reason,
     pattern,
+    args,
   });
 }
 
 /**
  * Emit security warning event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitSecurityWarn(
-  tool: string,
-  reason: string
+  input: {
+    tool: string;
+    reason: string;
+    args?: string;
+  }
 ): Promise<void> {
+  const { tool, reason, args } = input;
   await emitEvent("security.warn", {
     tool,
     reason,
+    args,
   });
 }
 
 /**
  * Emit user message event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitUserMessage(
-  content_length: number,
-  has_rating: boolean = false
+  input: {
+    content?: string;
+    content_length?: number;
+    has_rating?: boolean;
+    messageId?: string;
+    source?: string;
+  }
 ): Promise<void> {
+  const { content, content_length, has_rating, messageId, source } = input;
   await emitEvent("message.user", {
-    content_length,
-    has_rating,
+    content_length: content_length ?? content?.length ?? 0,
+    has_rating: has_rating ?? false,
+    messageId,
+    source,
   });
 }
 
 /**
  * Emit assistant message event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitAssistantMessage(
-  content_length: number,
-  has_voice_line: boolean = false,
-  has_isc: boolean = false
+  input: {
+    content?: string;
+    content_length?: number;
+    has_voice_line?: boolean;
+    has_isc?: boolean;
+    messageId?: string;
+  }
 ): Promise<void> {
+  const { content, content_length, has_voice_line, has_isc, messageId } = input;
   await emitEvent("message.assistant", {
-    content_length,
-    has_voice_line,
-    has_isc,
+    content_length: content_length ?? content?.length ?? 0,
+    has_voice_line: has_voice_line ?? false,
+    has_isc: has_isc ?? false,
+    messageId,
   });
 }
 
 /**
  * Emit explicit rating event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitExplicitRating(
-  score: number,
-  comment?: string
+  input: {
+    score: number;
+    comment?: string;
+    context?: string;
+    messageId?: string;
+    source?: string;
+  }
 ): Promise<void> {
+  const { score, comment, context, messageId, source } = input;
   await emitEvent("rating.explicit", {
     score,
     has_comment: !!comment,
     comment_preview: comment?.substring(0, 100),
+    context,
+    messageId,
+    source,
   });
 }
 
 /**
  * Emit implicit sentiment event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitImplicitSentiment(
-  score: number,
-  confidence: number,
-  indicators: string[]
+  input: {
+    score?: number;
+    sentiment?: string;
+    confidence: number;
+    indicators?: string[];
+    triggers?: string[];
+    messageId?: string;
+  }
 ): Promise<void> {
+  const { score, sentiment, confidence, indicators, triggers, messageId } = input;
   await emitEvent("rating.implicit", {
     score,
+    sentiment,
     confidence,
-    indicators,
+    indicators: indicators ?? triggers ?? [],
+    messageId,
   });
 }
 
 /**
  * Emit agent spawn event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitAgentSpawn(
-  agent_type: string,
-  prompt_length: number
+  input: {
+    taskId?: string;
+    agentType?: string;
+    agent_type?: string;
+    prompt_length?: number;
+  }
 ): Promise<void> {
+  const { taskId, agentType, agent_type, prompt_length } = input;
   await emitEvent("agent.spawn", {
-    agent_type,
+    task_id: taskId,
+    agent_type: agentType ?? agent_type,
     prompt_length,
   });
 }
 
 /**
  * Emit agent complete event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitAgentComplete(
-  agent_type: string,
-  result_length: number,
-  duration_ms?: number
+  input: {
+    taskId?: string;
+    agentType?: string;
+    agent_type?: string;
+    result_length?: number;
+    duration_ms?: number;
+    success?: boolean;
+    outputPath?: string;
+    error?: string;
+  }
 ): Promise<void> {
+  const { taskId, agentType, agent_type, result_length, duration_ms, success, outputPath, error } = input;
   await emitEvent("agent.complete", {
-    agent_type,
+    task_id: taskId,
+    agent_type: agentType ?? agent_type,
     result_length,
     duration_ms,
+    success,
+    output_path: outputPath,
+    error,
   });
 }
 
 /**
  * Emit voice notification event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitVoiceSent(
-  message_length: number,
-  voice_id?: string
+  input: {
+    text?: string;
+    message_length?: number;
+    voice_id?: string;
+    success?: boolean;
+  }
 ): Promise<void> {
+  const { text, message_length, voice_id, success } = input;
   await emitEvent("voice.sent", {
-    message_length,
+    message_length: message_length ?? text?.length ?? 0,
     voice_id,
+    success,
   });
 }
 
 /**
  * Emit learning captured event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitLearningCaptured(
-  category: string,
-  filepath: string
+  input: {
+    category?: string;
+    filepath?: string;
+    count?: number;
+    learnings?: string[];
+  }
 ): Promise<void> {
+  const { category, filepath, count, learnings } = input;
   await emitEvent("learning.captured", {
     category,
     filepath,
+    count,
+    learnings,
   });
 }
 
 /**
  * Emit ISC validation event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitISCValidated(
-  criteria_count: number,
-  all_passed: boolean,
-  warnings: string[]
+  input: {
+    valid?: boolean;
+    all_passed?: boolean;
+    criteriaCount?: number;
+    criteria_count?: number;
+    issues?: string[];
+    warnings?: string[];
+    messageId?: string;
+  }
 ): Promise<void> {
+  const { valid, all_passed, criteriaCount, criteria_count, issues, warnings, messageId } = input;
+  const warnList = issues ?? warnings ?? [];
   await emitEvent("isc.validated", {
-    criteria_count,
-    all_passed,
-    warning_count: warnings.length,
-    warnings: warnings.slice(0, 5),
+    criteria_count: criteriaCount ?? criteria_count ?? 0,
+    all_passed: all_passed ?? valid ?? true,
+    warning_count: warnList.length,
+    warnings: warnList.slice(0, 5),
+    messageId,
   });
 }
 
 /**
  * Emit context loaded event
+ *
+ * FIXED: Accept object parameter to match pai-unified.ts call pattern
  */
 export async function emitContextLoaded(
-  files_loaded: number,
-  total_size: number
+  input: {
+    files_loaded?: number;
+    total_size?: number;
+    contextLength?: number;
+    success?: boolean;
+    error?: string;
+  }
 ): Promise<void> {
+  const { files_loaded, total_size, contextLength, success, error } = input;
   await emitEvent("context.loaded", {
     files_loaded,
-    total_size,
+    total_size: total_size ?? contextLength,
+    success,
+    error,
   });
 }

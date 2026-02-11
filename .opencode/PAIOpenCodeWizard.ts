@@ -150,7 +150,7 @@ function execCommand(cmd: string, options: { cwd?: string; silent?: boolean } = 
 
 interface PrereqCheck {
   bun: boolean;
-  go: boolean;
+  bunVersion: string;
   git: boolean;
 }
 
@@ -159,26 +159,27 @@ function checkPrerequisites(): PrereqCheck {
   print(`${c.bold}Step 0: Prerequisites Check${c.reset}`);
   print(`${c.gray}─────────────────────────────────────────────────${c.reset}`);
 
-  const results: PrereqCheck = { bun: false, go: false, git: false };
+  const results: PrereqCheck = { bun: false, bunVersion: '', git: false };
 
-  // Check bun
+  // Check bun with version requirement (1.3+ required)
   try {
     const bunVersion = execSync('bun --version 2>/dev/null', { encoding: 'utf-8' }).trim();
-    printSuccess(`Bun ${bunVersion} found`);
-    results.bun = true;
+    const versionMatch = bunVersion.match(/(\d+)\.(\d+)/);
+    if (versionMatch) {
+      const major = parseInt(versionMatch[1]);
+      const minor = parseInt(versionMatch[2]);
+      if (major > 1 || (major === 1 && minor >= 3)) {
+        printSuccess(`Bun ${bunVersion} found`);
+        results.bun = true;
+        results.bunVersion = bunVersion;
+      } else {
+        printError(`Bun ${bunVersion} found — version 1.3+ required`);
+        printInfo('Upgrade Bun: bun upgrade');
+      }
+    }
   } catch {
     printError('Bun not found');
     printInfo('Install Bun: curl -fsSL https://bun.sh/install | bash');
-  }
-
-  // Check go
-  try {
-    const goVersion = execSync('go version 2>/dev/null', { encoding: 'utf-8' }).trim();
-    printSuccess(`${goVersion} found`);
-    results.go = true;
-  } catch {
-    printError('Go not found');
-    printInfo('Install Go: https://go.dev/dl/');
   }
 
   // Check git
@@ -251,6 +252,8 @@ async function buildOpenCode(): Promise<boolean> {
   print('');
 
   const buildDir = '/tmp/opencode-build';
+  // TODO: Update clone URL to Steffen025/opencode once custom patches are pushed
+  const cloneUrl = 'https://github.com/anomalyco/opencode.git';
 
   try {
     // Clean up any existing build
@@ -259,7 +262,7 @@ async function buildOpenCode(): Promise<boolean> {
     // Clone the repo
     printInfo('Cloning OpenCode repository...');
     const cloneResult = execCommand(
-      `git clone https://github.com/nicepkg/opencode.git ${buildDir}`,
+      `git clone ${cloneUrl} ${buildDir}`,
       { silent: false }
     );
 
@@ -268,10 +271,28 @@ async function buildOpenCode(): Promise<boolean> {
       return false;
     }
 
-    // Build
-    printInfo('Building OpenCode binary...');
+    // Checkout dev branch (development branch with latest features)
+    printInfo('Checking out dev branch...');
+    const checkoutResult = execCommand('git checkout dev', { cwd: buildDir, silent: false });
+
+    if (!checkoutResult.success) {
+      printError('Failed to checkout dev branch');
+      return false;
+    }
+
+    // Install dependencies
+    printInfo('Installing dependencies with bun...');
+    const installResult = execCommand('bun install', { cwd: buildDir, silent: false });
+
+    if (!installResult.success) {
+      printError('Failed to install dependencies');
+      return false;
+    }
+
+    // Build standalone binary
+    printInfo('Building OpenCode standalone binary...');
     const buildResult = execCommand(
-      'go build -o opencode ./cmd/opencode',
+      'bun run ./packages/opencode/script/build.ts --single',
       { cwd: buildDir, silent: false }
     );
 
@@ -280,13 +301,45 @@ async function buildOpenCode(): Promise<boolean> {
       return false;
     }
 
-    // Determine install location
-    const goBin = join(HOME, 'go', 'bin');
+    // Determine binary location (likely in packages/opencode/dist/)
+    printInfo('Locating built binary...');
+    const distDir = join(buildDir, 'packages', 'opencode', 'dist');
+    const possibleBinaries = ['opencode', 'opencode.exe', 'opencode-macos', 'opencode-linux', 'opencode-win.exe'];
+    let binaryPath: string | null = null;
+
+    for (const binary of possibleBinaries) {
+      const candidate = join(distDir, binary);
+      if (existsSync(candidate)) {
+        binaryPath = candidate;
+        break;
+      }
+    }
+
+    // If not found in dist, try with glob-based search
+    if (!binaryPath) {
+      try {
+        const findResult = execCommand('find packages/opencode/dist -type f -name "opencode*" 2>/dev/null | head -1', { cwd: buildDir, silent: true });
+        if (findResult.success && findResult.output) {
+          binaryPath = join(buildDir, findResult.output);
+        }
+      } catch (e) {
+        // Find failed, continue
+      }
+    }
+
+    if (!binaryPath) {
+      printError('Binary not found after build');
+      return false;
+    }
+
+    // Determine install location (local or system)
+    const localBin = join(HOME, '.local', 'bin');
     const usrLocalBin = '/usr/local/bin';
     let installPath: string;
 
-    if (existsSync(goBin)) {
-      installPath = join(goBin, 'opencode');
+    // Prefer ~/.local/bin if it exists or can be created
+    if (existsSync(localBin)) {
+      installPath = join(localBin, 'opencode');
     } else {
       installPath = join(usrLocalBin, 'opencode');
     }
@@ -294,7 +347,7 @@ async function buildOpenCode(): Promise<boolean> {
     // Move binary
     printInfo(`Installing to ${installPath}...`);
     const moveResult = execCommand(
-      `mv ${join(buildDir, 'opencode')} ${installPath}`,
+      `mv "${binaryPath}" "${installPath}"`,
       { silent: true }
     );
 
@@ -302,13 +355,28 @@ async function buildOpenCode(): Promise<boolean> {
       printWarning('May need sudo to install to system path');
       printInfo('Trying with sudo...');
       const sudoResult = execCommand(
-        `sudo mv ${join(buildDir, 'opencode')} ${installPath}`,
+        `sudo mv "${binaryPath}" "${installPath}"`,
         { silent: false }
       );
       if (!sudoResult.success) {
-        printError('Installation failed');
-        return false;
+        // Try using install instead
+        printInfo('Trying with install command...');
+        const installResult = execCommand(
+          `install "${binaryPath}" "${installPath}"`,
+          { silent: false }
+        );
+        if (!installResult.success) {
+          printError('Installation failed');
+          return false;
+        }
       }
+    }
+
+    // Make binary executable
+    try {
+      execSync(`chmod +x "${installPath}"`, { stdio: 'pipe' });
+    } catch (e) {
+      printWarning('Failed to set executable permissions');
     }
 
     // Verify
@@ -787,7 +855,7 @@ async function main(): Promise<void> {
     print('  bun run PAIOpenCodeWizard.ts --help    Show this help message');
     print('');
     print(`${c.bold}What it does:${c.reset}`);
-    print('  1. Checks prerequisites (bun, go, git)');
+    print('  1. Checks prerequisites (Bun 1.3+, git)');
     print('  2. Builds OpenCode from development source');
     print('  3. Guides you through 3 preset provider choices');
     print('  4. Sets up your identity and AI assistant name');
@@ -811,7 +879,7 @@ async function main(): Promise<void> {
   // Step 0: Prerequisites
   const prereqs = checkPrerequisites();
 
-  if (!prereqs.bun || !prereqs.go || !prereqs.git) {
+  if (!prereqs.bun || !prereqs.git) {
     print('');
     printError('Missing required prerequisites');
     printInfo('Please install the missing tools and run the wizard again.');

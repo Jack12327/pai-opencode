@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## v1.3.1 — Plugin Crash Fix + Interface Alignment (2026-02-11)
+
+### Fixed
+
+#### Critical: Tool Execution Crash (All Tools Affected)
+- **Symptom:** ALL tools (Bash, Read, Glob, Grep, etc.) crashed with `TypeError: undefined is not an object (evaluating 'Object.keys(args)')`
+- **Root cause:** Interface mismatch between `pai-unified.ts` (caller) and `observability-emitter.ts` (receiver). Emit functions expected positional parameters but were called with object parameters after a feature sync.
+- **Fix:** All 14 emit functions in `observability-emitter.ts` converted to accept object parameters with defensive null-checks. All 17 call-sites in `pai-unified.ts` updated to match.
+
+#### Critical: OpenCode Startup Failure
+- **Symptom:** OpenCode refused to start with config validation error
+- **Root cause:** Invalid `"pai"` top-level key in `opencode.json` — OpenCode doesn't recognize this config key
+- **Fix:** Removed `"pai"` block from `opencode.json`
+
+#### Installation Wizard: Build-from-Source Completely Broken ([#21](https://github.com/Steffen025/pai-opencode/issues/21))
+- **Symptom:** `git clone` in wizard fails with 404; even if clone succeeded, build would fail
+- **Root cause 1:** Clone URL referenced `nicepkg/opencode.git` which no longer exists
+- **Root cause 2:** Build commands used `go build` — but OpenCode is a TypeScript/Bun project, not Go
+- **Root cause 3:** Install paths referenced `~/go/bin` which is irrelevant
+- **Fix:** Complete rewrite of build-from-source function:
+  - Clone URL updated to `anomalyco/opencode.git`
+  - Build process now uses `bun install` + `bun run ./packages/opencode/script/build.ts --single`
+  - Added Bun 1.3+ prerequisite check with version validation
+  - Binary search in `packages/opencode/dist/` with platform-specific names
+  - Install to `~/.local/bin` or `/usr/local/bin` (removed Go paths)
+
+### Changed
+
+#### Simplified Versioning
+- **Removed `@version` tags** from individual plugin handler files (`pai-unified.ts`, `observability-emitter.ts`, `implicit-sentiment.ts`)
+- **Single version source:** Only the repository version (in README + CHANGELOG) matters. Individual subsystems don't have their own version lifecycle since they're always released together.
+
+---
+
 ## v1.3.0 — Dynamic Per-Task Model Tier Routing (2026-02-10)
 
 ### 🚀 Major: Dynamic Tier Routing Across Provider Boundaries
