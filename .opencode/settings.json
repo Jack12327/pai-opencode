@@ -1,7 +1,7 @@
 {
   "paiVersion": "2.5-opencode",
   "env": {
-    "PAI_DIR": ".opencode",
+    "PAI_DIR": "/Users/jackhong/Documents/文档/Codex/PAI_OpenCode/.opencode",
     "OPENCODE_MAX_OUTPUT_TOKENS": "80000",
     "BASH_DEFAULT_TIMEOUT_MS": "600000"
   },
@@ -13,41 +13,29 @@
   ],
   "daidentity": {
     "name": "PAI",
-    "fullName": "Personal AI Assistant",
+    "fullName": "PAI - Personal AI",
     "displayName": "PAI",
     "color": "#3B82F6",
-    "voiceId": "",
-    "voice": {
-      "stability": 0.5,
-      "similarity_boost": 0.75,
-      "style": 0,
-      "speed": 1,
-      "use_speaker_boost": true,
-      "volume": 0.8
-    },
-    "startupCatchphrase": "PAI ready."
+    "startupCatchphrase": "PAI here, ready to help."
   },
   "principal": {
-    "name": "User",
-    "timezone": "UTC"
+    "name": "jackhong",
+    "timezone": "Asia/Shanghai"
   },
   "pai": {
     "source": "github.com/Steffen025/pai-opencode",
     "upstream": "github.com/danielmiessler/PAI",
-    "version": "2.5",
-    "algorithm": "v0.2.25"
+    "version": "2.5"
   },
   "techStack": {
-    "browser": "chrome",
+    "browser": "arc",
     "terminal": "terminal",
     "packageManager": "bun",
     "language": "TypeScript"
   },
   "provider": {
-    "id": "anthropic",
-    "name": "Anthropic Claude models - recommended for best quality",
-    "model": "anthropic/claude-sonnet-4-5",
-    "profile": "anthropic",
-    "multiResearch": true
+    "id": "zen-free",
+    "name": "ZEN FREE",
+    "profile": "zen"
   }
 }

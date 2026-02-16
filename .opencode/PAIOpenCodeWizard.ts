@@ -19,6 +19,7 @@ import { homedir, userInfo } from 'os';
 import { execSync } from 'child_process';
 import * as readline from 'readline';
 import { parse as parseYaml } from 'yaml';
+import { fileURLToPath } from 'url';
 
 // ANSI colors
 const c = {
@@ -36,7 +37,7 @@ const c = {
 
 // Paths
 const HOME = homedir();
-const SCRIPT_DIR = dirname(new URL(import.meta.url).pathname);
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const OPENCODE_DIR = SCRIPT_DIR; // Wizard lives inside .opencode/
 const PROJECT_ROOT = dirname(OPENCODE_DIR);
 const PROFILES_DIR = join(OPENCODE_DIR, 'profiles');
@@ -780,8 +781,8 @@ async function writeConfiguration(config: PresetConfig): Promise<boolean> {
   }
   printSuccess('Created MEMORY directories');
 
-  // Fix permissions
-  fixPermissions(OPENCODE_DIR);
+  // Skip recursive permission changes to avoid touching unrelated files.
+  printInfo('Skipped recursive permission normalization');
 
   return true;
 }
